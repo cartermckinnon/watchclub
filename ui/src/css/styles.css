@@ -1,0 +1,503 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand a {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #667eea;
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.nav-links a {
+    color: #666;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover {
+    color: #667eea;
+}
+
+/* Container */
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Page Headers */
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+}
+
+.page-header .btn-secondary {
+    margin-top: 1rem;
+}
+
+.club-meta {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    margin-top: 0.5rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Cards */
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card h2, .card h3 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.card h2 {
+    font-size: 1.5rem;
+}
+
+.card h3 {
+    font-size: 1.2rem;
+}
+
+.card p {
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+/* Action cards grid */
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.action-card {
+    margin-bottom: 0;
+}
+
+/* Clubs grid */
+.clubs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.club-card {
+    text-align: center;
+}
+
+.club-card h3 {
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+/* Club list */
+.club-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.club-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.club-item:hover {
+    background: #e9ecef;
+    transform: translateX(4px);
+}
+
+/* Member list */
+.member-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+/* Movie list */
+.movie-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.movie-item {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.movie-notes {
+    margin-top: 0.5rem;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* Schedule list */
+.schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.schedule-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.week-number {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #667eea;
+    color: white;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.schedule-details {
+    flex: 1;
+}
+
+.schedule-date {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+/* Share link */
+.share-link {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.share-link input {
+    flex: 1;
+}
+
+.share-link button {
+    flex-shrink: 0;
+}
+
+/* Status badges */
+.club-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.club-status.started {
+    background: #d4edda;
+    color: #155724;
+}
+
+.club-status.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge.pending {
+    background: #f8f9fa;
+    color: #666;
+}
+
+/* Form elements */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: -0.5rem;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="number"],
+textarea {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+input[readonly] {
+    background: #f8f9fa;
+    cursor: pointer;
+}
+
+textarea {
+    resize: vertical;
+}
+
+/* Buttons */
+button, .btn {
+    padding: 0.75rem 1.5rem;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+button:hover, .btn:hover {
+    background: #5568d3;
+    transform: translateY(-1px);
+}
+
+button:active, .btn:active {
+    transform: translateY(0);
+}
+
+button.primary, .btn.primary {
+    background: #764ba2;
+}
+
+button.primary:hover, .btn.primary:hover {
+    background: #653a8a;
+}
+
+.btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+    background: #f8f9fa;
+}
+
+.btn-link {
+    background: none;
+    color: #667eea;
+    padding: 0.5rem 0;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+    transform: none;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* Messages */
+.error-message {
+    display: none;
+    padding: 0.75rem 1rem;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    border-radius: 6px;
+    margin-top: 1rem;
+}
+
+.success-message {
+    padding: 0.75rem 1rem;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    border-radius: 6px;
+    margin-top: 1rem;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.empty-state p {
+    margin-bottom: 1.5rem;
+    color: #666;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card, .club-item, .member-item, .movie-item, .schedule-item {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .container {
+        padding: 1rem;
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+    }
+
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .clubs-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card {
+        padding: 1.5rem;
+    }
+
+    .club-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .share-link {
+        flex-direction: column;
+    }
+
+    .share-link input,
+    .share-link button {
+        width: 100%;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .schedule-item {
+        flex-direction: column;
+    }
+
+    .week-number {
+        width: 100%;
+    }
+}

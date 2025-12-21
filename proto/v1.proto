@@ -1,0 +1,176 @@
+syntax = "proto3";
+
+option go_package = "internal/api/v1";
+
+package watchclub;
+
+import "google/protobuf/timestamp.proto";
+
+// Club represents a watch club where members coordinate watching things together
+message Club {
+  string id = 1;
+  string name = 2;
+  repeated string member_ids = 3;
+  google.protobuf.Timestamp start_date = 4;
+  bool started = 5; // Whether the club has been shuffled and started
+  google.protobuf.Timestamp created_at = 6;
+}
+
+// User represents a member of the watchclub
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+// MoviePick represents a movie that a user has picked for their club
+message MoviePick {
+  string id = 1;
+  string club_id = 2;
+  string user_id = 3;
+  string title = 4;
+  int32 year = 5;
+  string notes = 6; // Optional notes about why they picked this movie
+  google.protobuf.Timestamp created_at = 7;
+}
+
+// WeeklyAssignment represents which movie should be watched in a given week
+message WeeklyAssignment {
+  string id = 1;
+  string club_id = 2;
+  int32 week_number = 3; // Week 1, 2, 3, etc. from the start of the club
+  google.protobuf.Timestamp week_start_date = 4;
+  MoviePick movie = 5;
+}
+
+// CreateUserRequest is the request to create a new user
+message CreateUserRequest {
+  string name = 1;
+  string email = 2;
+}
+
+// CreateUserResponse is the response after creating a user
+message CreateUserResponse {
+  User user = 1;
+}
+
+// CreateClubRequest is the request to create a new club
+message CreateClubRequest {
+  string name = 1;
+  google.protobuf.Timestamp start_date = 2;
+}
+
+// CreateClubResponse is the response after creating a club
+message CreateClubResponse {
+  Club club = 1;
+}
+
+// JoinClubRequest is the request for a user to join a club
+message JoinClubRequest {
+  string club_id = 1;
+  string user_id = 2;
+}
+
+// JoinClubResponse is the response after joining a club
+message JoinClubResponse {
+  Club club = 1;
+}
+
+// AddMoviePickRequest is the request to add a movie pick to a club
+message AddMoviePickRequest {
+  string club_id = 1;
+  string user_id = 2;
+  string title = 3;
+  int32 year = 4;
+  string notes = 5;
+}
+
+// AddMoviePickResponse is the response after adding a movie pick
+message AddMoviePickResponse {
+  MoviePick movie_pick = 1;
+}
+
+// GetClubRequest is the request to get club details
+message GetClubRequest {
+  string club_id = 1;
+}
+
+// GetClubResponse is the response with club details
+message GetClubResponse {
+  Club club = 1;
+  repeated User members = 2;
+  repeated MoviePick movie_picks = 3;
+}
+
+// StartClubRequest is the request to shuffle picks and start the club
+message StartClubRequest {
+  string club_id = 1;
+}
+
+// StartClubResponse is the response after starting the club
+message StartClubResponse {
+  Club club = 1;
+  repeated WeeklyAssignment assignments = 2;
+}
+
+// GetWeeklyAssignmentsRequest is the request to get the weekly movie schedule
+message GetWeeklyAssignmentsRequest {
+  string club_id = 1;
+}
+
+// GetWeeklyAssignmentsResponse is the response with the weekly movie schedule
+message GetWeeklyAssignmentsResponse {
+  repeated WeeklyAssignment assignments = 1;
+}
+
+// SendRecoveryEmailRequest is the request to send an account recovery email
+message SendRecoveryEmailRequest {
+  string email = 1;
+}
+
+// SendRecoveryEmailResponse is the response after sending a recovery email
+message SendRecoveryEmailResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// GetUserRequest is the request to get a user by ID
+message GetUserRequest {
+  string user_id = 1;
+}
+
+// GetUserResponse is the response with user data
+message GetUserResponse {
+  User user = 1;
+}
+
+// WatchClubService is the main service for the watchclub application
+service WatchClubService {
+  // CreateUser creates a new user
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+
+  // GetUser gets a user by ID
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+  // CreateClub creates a new movie club
+  rpc CreateClub(CreateClubRequest) returns (CreateClubResponse);
+
+  // JoinClub adds a user to a club
+  rpc JoinClub(JoinClubRequest) returns (JoinClubResponse);
+
+  // AddMoviePick adds a movie pick to a club
+  rpc AddMoviePick(AddMoviePickRequest) returns (AddMoviePickResponse);
+
+  // GetClub gets details about a club including members and their picks
+  rpc GetClub(GetClubRequest) returns (GetClubResponse);
+
+  // StartClub shuffles all picks and generates the weekly viewing schedule
+  rpc StartClub(StartClubRequest) returns (StartClubResponse);
+
+  // GetWeeklyAssignments gets the weekly movie viewing schedule for a club
+  rpc GetWeeklyAssignments(GetWeeklyAssignmentsRequest) returns (GetWeeklyAssignmentsResponse);
+
+  // SendRecoveryEmail sends an account recovery email with a login link
+  rpc SendRecoveryEmail(SendRecoveryEmailRequest) returns (SendRecoveryEmailResponse);
+}

@@ -1,0 +1,66 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: watchclub-backend
+  labels:
+    app: watchclub
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: grpc
+    protocol: TCP
+    name: grpc
+  selector:
+    app: watchclub
+    component: backend
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watchclub-backend
+  labels:
+    app: watchclub
+    component: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: watchclub
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: watchclub
+        component: backend
+    spec:
+      containers:
+      - name: watchclub
+        image: ghcr.io/cartermckinnon/watchclub:latest
+        args:
+        - server
+        - --address=:8080
+        ports:
+        - name: grpc
+          containerPort: 8080
+          protocol: TCP
+        livenessProbe:
+          tcpSocket:
+            port: grpc
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: grpc
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi

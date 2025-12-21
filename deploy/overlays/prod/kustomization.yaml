@@ -1,0 +1,79 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: watchclub-prod
+
+namePrefix: prod-
+
+resources:
+- ../../base
+- hpa-backend.yaml
+- hpa-frontend.yaml
+
+commonLabels:
+  environment: production
+
+patches:
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: watchclub-backend
+    spec:
+      replicas: 3
+      template:
+        spec:
+          containers:
+          - name: watchclub
+            image: ghcr.io/cartermckinnon/watchclub:v1.0.0
+            resources:
+              requests:
+                cpu: 200m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+  target:
+    kind: Deployment
+    name: watchclub-backend
+
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: watchclub-frontend
+    spec:
+      replicas: 3
+      template:
+        spec:
+          containers:
+          - name: nginx
+            image: ghcr.io/cartermckinnon/watchclub/ui:v1.0.0
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+  target:
+    kind: Deployment
+    name: watchclub-frontend
+
+- patch: |-
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: watchclub
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+    spec:
+      tls:
+      - hosts:
+        - watchclub.example.com
+        secretName: watchclub-tls
+      rules:
+      - host: watchclub.example.com
+  target:
+    kind: Ingress
+    name: watchclub

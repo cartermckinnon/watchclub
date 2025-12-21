@@ -324,61 +324,61 @@ proto.watchclub.WatchClubServicePromiseClient.prototype.joinClub =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
- *   !proto.watchclub.AddMoviePickRequest,
- *   !proto.watchclub.AddMoviePickResponse>}
+ *   !proto.watchclub.AddPickRequest,
+ *   !proto.watchclub.AddPickResponse>}
  */
-const methodDescriptor_WatchClubService_AddMoviePick = new grpc.web.MethodDescriptor(
-  '/watchclub.WatchClubService/AddMoviePick',
+const methodDescriptor_WatchClubService_AddPick = new grpc.web.MethodDescriptor(
+  '/watchclub.WatchClubService/AddPick',
   grpc.web.MethodType.UNARY,
-  proto.watchclub.AddMoviePickRequest,
-  proto.watchclub.AddMoviePickResponse,
+  proto.watchclub.AddPickRequest,
+  proto.watchclub.AddPickResponse,
   /**
-   * @param {!proto.watchclub.AddMoviePickRequest} request
+   * @param {!proto.watchclub.AddPickRequest} request
    * @return {!Uint8Array}
    */
   function(request) {
     return request.serializeBinary();
   },
-  proto.watchclub.AddMoviePickResponse.deserializeBinary
+  proto.watchclub.AddPickResponse.deserializeBinary
 );
 
 
 /**
- * @param {!proto.watchclub.AddMoviePickRequest} request The
+ * @param {!proto.watchclub.AddPickRequest} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.RpcError, ?proto.watchclub.AddMoviePickResponse)}
+ * @param {function(?grpc.web.RpcError, ?proto.watchclub.AddPickResponse)}
  *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.watchclub.AddMoviePickResponse>|undefined}
+ * @return {!grpc.web.ClientReadableStream<!proto.watchclub.AddPickResponse>|undefined}
  *     The XHR Node Readable Stream
  */
-proto.watchclub.WatchClubServiceClient.prototype.addMoviePick =
+proto.watchclub.WatchClubServiceClient.prototype.addPick =
     function(request, metadata, callback) {
   return this.client_.rpcCall(this.hostname_ +
-      '/watchclub.WatchClubService/AddMoviePick',
+      '/watchclub.WatchClubService/AddPick',
       request,
       metadata || {},
-      methodDescriptor_WatchClubService_AddMoviePick,
+      methodDescriptor_WatchClubService_AddPick,
       callback);
 };
 
 
 /**
- * @param {!proto.watchclub.AddMoviePickRequest} request The
+ * @param {!proto.watchclub.AddPickRequest} request The
  *     request proto
  * @param {?Object<string, string>=} metadata User defined
  *     call metadata
- * @return {!Promise<!proto.watchclub.AddMoviePickResponse>}
+ * @return {!Promise<!proto.watchclub.AddPickResponse>}
  *     Promise that resolves to the response
  */
-proto.watchclub.WatchClubServicePromiseClient.prototype.addMoviePick =
+proto.watchclub.WatchClubServicePromiseClient.prototype.addPick =
     function(request, metadata) {
   return this.client_.unaryCall(this.hostname_ +
-      '/watchclub.WatchClubService/AddMoviePick',
+      '/watchclub.WatchClubService/AddPick',
       request,
       metadata || {},
-      methodDescriptor_WatchClubService_AddMoviePick);
+      methodDescriptor_WatchClubService_AddPick);
 };
 
 

@@ -13,7 +13,7 @@ func NewMemoryStorage() Storage {
 	return &memoryStorage{
 		users:             make(map[string]*v1.User),
 		clubs:             make(map[string]*v1.Club),
-		moviePicks:        make(map[string]*v1.MoviePick),
+		picks:             make(map[string]*v1.Pick),
 		weeklyAssignments: make(map[string]*v1.WeeklyAssignment),
 	}
 }
@@ -22,7 +22,7 @@ type memoryStorage struct {
 	mu                sync.RWMutex
 	users             map[string]*v1.User
 	clubs             map[string]*v1.Club
-	moviePicks        map[string]*v1.MoviePick
+	picks             map[string]*v1.Pick
 	weeklyAssignments map[string]*v1.WeeklyAssignment
 }
 
@@ -130,36 +130,36 @@ func (m *memoryStorage) DeleteClub(ctx context.Context, id string) error {
 	return nil
 }
 
-// MoviePick operations
+// Pick operations
 
-func (m *memoryStorage) CreateMoviePick(ctx context.Context, pick *v1.MoviePick) error {
+func (m *memoryStorage) CreatePick(ctx context.Context, pick *v1.Pick) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _, exists := m.moviePicks[pick.Id]; exists {
-		return fmt.Errorf("movie pick already exists: %s", pick.Id)
+	if _, exists := m.picks[pick.Id]; exists {
+		return fmt.Errorf("pick already exists: %s", pick.Id)
 	}
-	m.moviePicks[pick.Id] = pick
+	m.picks[pick.Id] = pick
 	return nil
 }
 
-func (m *memoryStorage) GetMoviePick(ctx context.Context, id string) (*v1.MoviePick, error) {
+func (m *memoryStorage) GetPick(ctx context.Context, id string) (*v1.Pick, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	pick, ok := m.moviePicks[id]
+	pick, ok := m.picks[id]
 	if !ok {
-		return nil, fmt.Errorf("movie pick not found: %s", id)
+		return nil, fmt.Errorf("pick not found: %s", id)
 	}
 	return pick, nil
 }
 
-func (m *memoryStorage) ListMoviePicks(ctx context.Context, clubID string) ([]*v1.MoviePick, error) {
+func (m *memoryStorage) ListPicks(ctx context.Context, clubID string) ([]*v1.Pick, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	picks := make([]*v1.MoviePick, 0)
-	for _, pick := range m.moviePicks {
+	picks := make([]*v1.Pick, 0)
+	for _, pick := range m.picks {
 		if pick.ClubId == clubID {
 			picks = append(picks, pick)
 		}
@@ -167,14 +167,14 @@ func (m *memoryStorage) ListMoviePicks(ctx context.Context, clubID string) ([]*v
 	return picks, nil
 }
 
-func (m *memoryStorage) DeleteMoviePick(ctx context.Context, id string) error {
+func (m *memoryStorage) DeletePick(ctx context.Context, id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _, ok := m.moviePicks[id]; !ok {
-		return fmt.Errorf("movie pick not found: %s", id)
+	if _, ok := m.picks[id]; !ok {
+		return fmt.Errorf("pick not found: %s", id)
 	}
-	delete(m.moviePicks, id)
+	delete(m.picks, id)
 	return nil
 }
 

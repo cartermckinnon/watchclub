@@ -4,7 +4,7 @@ const {
     GetUserRequest,
     CreateClubRequest,
     JoinClubRequest,
-    AddMoviePickRequest,
+    AddPickRequest,
     GetClubRequest,
     StartClubRequest,
     GetWeeklyAssignmentsRequest,
@@ -333,7 +333,7 @@ function renderClubDetailPage(params) {
 
         const club = response.getClub();
         const members = response.getMembersList();
-        const picks = response.getMoviePicksList();
+        const picks = response.getPicksList();
 
         // Check if user is a member
         const isMember = members.some(m => m.getId() === state.currentUser.id);
@@ -620,14 +620,14 @@ function addPickAction(clubId) {
         return;
     }
 
-    const request = new AddMoviePickRequest();
+    const request = new AddPickRequest();
     request.setClubId(clubId);
     request.setUserId(state.currentUser.id);
     request.setTitle(title);
     if (year) request.setYear(year);
     if (notes) request.setNotes(notes);
 
-    client.addMoviePick(request, {}, (err) => {
+    client.addPick(request, {}, (err) => {
         if (err) {
             errorEl.textContent = `Error: ${err.message}`;
             errorEl.style.display = 'block';
@@ -670,12 +670,12 @@ function loadSchedule(clubId) {
         scheduleContent.innerHTML = `
             <div class="schedule-list">
                 ${assignments.map(a => {
-                    const movie = a.getMovie();
+                    const pick = a.getPick();
                     return `
                         <div class="schedule-item">
                             <div class="week-number">Week ${a.getWeekNumber()}</div>
                             <div class="schedule-details">
-                                <strong>${escapeHtml(movie.getTitle())}</strong> ${movie.getYear() ? `(${movie.getYear()})` : ''}
+                                <strong>${escapeHtml(pick.getTitle())}</strong> ${pick.getYear() ? `(${pick.getYear()})` : ''}
                                 <div class="schedule-date">${formatDate(a.getWeekStartDate())}</div>
                             </div>
                         </div>

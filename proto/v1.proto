@@ -24,24 +24,24 @@ message User {
   google.protobuf.Timestamp created_at = 4;
 }
 
-// MoviePick represents a movie that a user has picked for their club
-message MoviePick {
+// Pick represents something that a user has picked for their club to watch
+message Pick {
   string id = 1;
   string club_id = 2;
   string user_id = 3;
   string title = 4;
   int32 year = 5;
-  string notes = 6; // Optional notes about why they picked this movie
+  string notes = 6; // Optional notes about why they picked this
   google.protobuf.Timestamp created_at = 7;
 }
 
-// WeeklyAssignment represents which movie should be watched in a given week
+// WeeklyAssignment represents which pick should be watched in a given week
 message WeeklyAssignment {
   string id = 1;
   string club_id = 2;
   int32 week_number = 3; // Week 1, 2, 3, etc. from the start of the club
   google.protobuf.Timestamp week_start_date = 4;
-  MoviePick movie = 5;
+  Pick pick = 5;
 }
 
 // CreateUserRequest is the request to create a new user
@@ -77,8 +77,8 @@ message JoinClubResponse {
   Club club = 1;
 }
 
-// AddMoviePickRequest is the request to add a movie pick to a club
-message AddMoviePickRequest {
+// AddPickRequest is the request to add a pick to a club
+message AddPickRequest {
   string club_id = 1;
   string user_id = 2;
   string title = 3;
@@ -86,9 +86,9 @@ message AddMoviePickRequest {
   string notes = 5;
 }
 
-// AddMoviePickResponse is the response after adding a movie pick
-message AddMoviePickResponse {
-  MoviePick movie_pick = 1;
+// AddPickResponse is the response after adding a pick
+message AddPickResponse {
+  Pick pick = 1;
 }
 
 // GetClubRequest is the request to get club details
@@ -100,7 +100,7 @@ message GetClubRequest {
 message GetClubResponse {
   Club club = 1;
   repeated User members = 2;
-  repeated MoviePick movie_picks = 3;
+  repeated Pick picks = 3;
 }
 
 // StartClubRequest is the request to shuffle picks and start the club
@@ -114,12 +114,12 @@ message StartClubResponse {
   repeated WeeklyAssignment assignments = 2;
 }
 
-// GetWeeklyAssignmentsRequest is the request to get the weekly movie schedule
+// GetWeeklyAssignmentsRequest is the request to get the weekly viewing schedule
 message GetWeeklyAssignmentsRequest {
   string club_id = 1;
 }
 
-// GetWeeklyAssignmentsResponse is the response with the weekly movie schedule
+// GetWeeklyAssignmentsResponse is the response with the weekly viewing schedule
 message GetWeeklyAssignmentsResponse {
   repeated WeeklyAssignment assignments = 1;
 }
@@ -153,14 +153,14 @@ service WatchClubService {
   // GetUser gets a user by ID
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
 
-  // CreateClub creates a new movie club
+  // CreateClub creates a new watch club
   rpc CreateClub(CreateClubRequest) returns (CreateClubResponse);
 
   // JoinClub adds a user to a club
   rpc JoinClub(JoinClubRequest) returns (JoinClubResponse);
 
-  // AddMoviePick adds a movie pick to a club
-  rpc AddMoviePick(AddMoviePickRequest) returns (AddMoviePickResponse);
+  // AddPick adds a pick to a club
+  rpc AddPick(AddPickRequest) returns (AddPickResponse);
 
   // GetClub gets details about a club including members and their picks
   rpc GetClub(GetClubRequest) returns (GetClubResponse);
@@ -168,7 +168,7 @@ service WatchClubService {
   // StartClub shuffles all picks and generates the weekly viewing schedule
   rpc StartClub(StartClubRequest) returns (StartClubResponse);
 
-  // GetWeeklyAssignments gets the weekly movie viewing schedule for a club
+  // GetWeeklyAssignments gets the weekly viewing schedule for a club
   rpc GetWeeklyAssignments(GetWeeklyAssignmentsRequest) returns (GetWeeklyAssignmentsResponse);
 
   // SendRecoveryEmail sends an account recovery email with a login link

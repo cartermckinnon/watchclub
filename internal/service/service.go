@@ -141,8 +141,8 @@ func (s *WatchClubService) JoinClub(ctx context.Context, req *v1.JoinClubRequest
 	return &v1.JoinClubResponse{Club: club}, nil
 }
 
-// AddMoviePick adds a movie pick to a club
-func (s *WatchClubService) AddMoviePick(ctx context.Context, req *v1.AddMoviePickRequest) (*v1.AddMoviePickResponse, error) {
+// AddPick adds a pick to a club
+func (s *WatchClubService) AddPick(ctx context.Context, req *v1.AddPickRequest) (*v1.AddPickResponse, error) {
 	if req.ClubId == "" {
 		return nil, status.Error(codes.InvalidArgument, "club_id is required")
 	}
@@ -163,7 +163,7 @@ func (s *WatchClubService) AddMoviePick(ctx context.Context, req *v1.AddMoviePic
 		return nil, status.Errorf(codes.NotFound, "user not found: %v", err)
 	}
 
-	pick := &v1.MoviePick{
+	pick := &v1.Pick{
 		Id:        uuid.New().String(),
 		ClubId:    req.ClubId,
 		UserId:    req.UserId,
@@ -173,11 +173,11 @@ func (s *WatchClubService) AddMoviePick(ctx context.Context, req *v1.AddMoviePic
 		CreatedAt: timestamppb.Now(),
 	}
 
-	if err := s.storage.CreateMoviePick(ctx, pick); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create movie pick: %v", err)
+	if err := s.storage.CreatePick(ctx, pick); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create pick: %v", err)
 	}
 
-	return &v1.AddMoviePickResponse{MoviePick: pick}, nil
+	return &v1.AddPickResponse{Pick: pick}, nil
 }
 
 // GetClub gets details about a club including members and their picks
@@ -201,16 +201,16 @@ func (s *WatchClubService) GetClub(ctx context.Context, req *v1.GetClubRequest) 
 		members = append(members, user)
 	}
 
-	// Get all movie picks
-	picks, err := s.storage.ListMoviePicks(ctx, req.ClubId)
+	// Get all picks
+	picks, err := s.storage.ListPicks(ctx, req.ClubId)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get movie picks: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to get picks: %v", err)
 	}
 
 	return &v1.GetClubResponse{
-		Club:       club,
-		Members:    members,
-		MoviePicks: picks,
+		Club:    club,
+		Members: members,
+		Picks:   picks,
 	}, nil
 }
 
@@ -229,18 +229,18 @@ func (s *WatchClubService) StartClub(ctx context.Context, req *v1.StartClubReque
 		return nil, status.Error(codes.FailedPrecondition, "club already started")
 	}
 
-	// Get all movie picks
-	picks, err := s.storage.ListMoviePicks(ctx, req.ClubId)
+	// Get all picks
+	picks, err := s.storage.ListPicks(ctx, req.ClubId)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get movie picks: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to get picks: %v", err)
 	}
 
 	if len(picks) == 0 {
-		return nil, status.Error(codes.FailedPrecondition, "no movie picks to shuffle")
+		return nil, status.Error(codes.FailedPrecondition, "no picks to shuffle")
 	}
 
 	// Shuffle the picks
-	shuffled := make([]*v1.MoviePick, len(picks))
+	shuffled := make([]*v1.Pick, len(picks))
 	copy(shuffled, picks)
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(shuffled), func(i, j int) {
@@ -258,7 +258,7 @@ func (s *WatchClubService) StartClub(ctx context.Context, req *v1.StartClubReque
 			ClubId:        req.ClubId,
 			WeekNumber:    int32(i + 1),
 			WeekStartDate: timestamppb.New(weekStart),
-			Movie:         pick,
+			Pick:          pick,
 		}
 
 		if err := s.storage.CreateWeeklyAssignment(ctx, assignment); err != nil {

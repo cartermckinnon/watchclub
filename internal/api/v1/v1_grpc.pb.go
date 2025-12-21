@@ -26,17 +26,17 @@ type WatchClubServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	// GetUser gets a user by ID
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
-	// CreateClub creates a new movie club
+	// CreateClub creates a new watch club
 	CreateClub(ctx context.Context, in *CreateClubRequest, opts ...grpc.CallOption) (*CreateClubResponse, error)
 	// JoinClub adds a user to a club
 	JoinClub(ctx context.Context, in *JoinClubRequest, opts ...grpc.CallOption) (*JoinClubResponse, error)
-	// AddMoviePick adds a movie pick to a club
-	AddMoviePick(ctx context.Context, in *AddMoviePickRequest, opts ...grpc.CallOption) (*AddMoviePickResponse, error)
+	// AddPick adds a pick to a club
+	AddPick(ctx context.Context, in *AddPickRequest, opts ...grpc.CallOption) (*AddPickResponse, error)
 	// GetClub gets details about a club including members and their picks
 	GetClub(ctx context.Context, in *GetClubRequest, opts ...grpc.CallOption) (*GetClubResponse, error)
 	// StartClub shuffles all picks and generates the weekly viewing schedule
 	StartClub(ctx context.Context, in *StartClubRequest, opts ...grpc.CallOption) (*StartClubResponse, error)
-	// GetWeeklyAssignments gets the weekly movie viewing schedule for a club
+	// GetWeeklyAssignments gets the weekly viewing schedule for a club
 	GetWeeklyAssignments(ctx context.Context, in *GetWeeklyAssignmentsRequest, opts ...grpc.CallOption) (*GetWeeklyAssignmentsResponse, error)
 	// SendRecoveryEmail sends an account recovery email with a login link
 	SendRecoveryEmail(ctx context.Context, in *SendRecoveryEmailRequest, opts ...grpc.CallOption) (*SendRecoveryEmailResponse, error)
@@ -86,9 +86,9 @@ func (c *watchClubServiceClient) JoinClub(ctx context.Context, in *JoinClubReque
 	return out, nil
 }
 
-func (c *watchClubServiceClient) AddMoviePick(ctx context.Context, in *AddMoviePickRequest, opts ...grpc.CallOption) (*AddMoviePickResponse, error) {
-	out := new(AddMoviePickResponse)
-	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/AddMoviePick", in, out, opts...)
+func (c *watchClubServiceClient) AddPick(ctx context.Context, in *AddPickRequest, opts ...grpc.CallOption) (*AddPickResponse, error) {
+	out := new(AddPickResponse)
+	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/AddPick", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -139,17 +139,17 @@ type WatchClubServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	// GetUser gets a user by ID
 	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
-	// CreateClub creates a new movie club
+	// CreateClub creates a new watch club
 	CreateClub(context.Context, *CreateClubRequest) (*CreateClubResponse, error)
 	// JoinClub adds a user to a club
 	JoinClub(context.Context, *JoinClubRequest) (*JoinClubResponse, error)
-	// AddMoviePick adds a movie pick to a club
-	AddMoviePick(context.Context, *AddMoviePickRequest) (*AddMoviePickResponse, error)
+	// AddPick adds a pick to a club
+	AddPick(context.Context, *AddPickRequest) (*AddPickResponse, error)
 	// GetClub gets details about a club including members and their picks
 	GetClub(context.Context, *GetClubRequest) (*GetClubResponse, error)
 	// StartClub shuffles all picks and generates the weekly viewing schedule
 	StartClub(context.Context, *StartClubRequest) (*StartClubResponse, error)
-	// GetWeeklyAssignments gets the weekly movie viewing schedule for a club
+	// GetWeeklyAssignments gets the weekly viewing schedule for a club
 	GetWeeklyAssignments(context.Context, *GetWeeklyAssignmentsRequest) (*GetWeeklyAssignmentsResponse, error)
 	// SendRecoveryEmail sends an account recovery email with a login link
 	SendRecoveryEmail(context.Context, *SendRecoveryEmailRequest) (*SendRecoveryEmailResponse, error)
@@ -172,8 +172,8 @@ func (UnimplementedWatchClubServiceServer) CreateClub(context.Context, *CreateCl
 func (UnimplementedWatchClubServiceServer) JoinClub(context.Context, *JoinClubRequest) (*JoinClubResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinClub not implemented")
 }
-func (UnimplementedWatchClubServiceServer) AddMoviePick(context.Context, *AddMoviePickRequest) (*AddMoviePickResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddMoviePick not implemented")
+func (UnimplementedWatchClubServiceServer) AddPick(context.Context, *AddPickRequest) (*AddPickResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddPick not implemented")
 }
 func (UnimplementedWatchClubServiceServer) GetClub(context.Context, *GetClubRequest) (*GetClubResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClub not implemented")
@@ -272,20 +272,20 @@ func _WatchClubService_JoinClub_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _WatchClubService_AddMoviePick_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddMoviePickRequest)
+func _WatchClubService_AddPick_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddPickRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WatchClubServiceServer).AddMoviePick(ctx, in)
+		return srv.(WatchClubServiceServer).AddPick(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/watchclub.WatchClubService/AddMoviePick",
+		FullMethod: "/watchclub.WatchClubService/AddPick",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WatchClubServiceServer).AddMoviePick(ctx, req.(*AddMoviePickRequest))
+		return srv.(WatchClubServiceServer).AddPick(ctx, req.(*AddPickRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -386,8 +386,8 @@ var WatchClubService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _WatchClubService_JoinClub_Handler,
 		},
 		{
-			MethodName: "AddMoviePick",
-			Handler:    _WatchClubService_AddMoviePick_Handler,
+			MethodName: "AddPick",
+			Handler:    _WatchClubService_AddPick_Handler,
 		},
 		{
 			MethodName: "GetClub",

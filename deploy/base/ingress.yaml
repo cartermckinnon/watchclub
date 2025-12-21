@@ -10,7 +10,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: watchclub.example.com
+  - host: watchclub.squad.gay
     http:
       paths:
       - path: /

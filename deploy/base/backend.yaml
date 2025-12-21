@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: watchclub-backend
+  name: backend
   labels:
     app: watchclub
     component: backend
@@ -21,7 +21,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: watchclub-backend
+  name: backend
   labels:
     app: watchclub
     component: backend
@@ -37,8 +37,10 @@ spec:
         app: watchclub
         component: backend
     spec:
+      imagePullSecrets:
+      - name: ghcr-credentials
       containers:
-      - name: watchclub
+      - name: server
         image: ghcr.io/cartermckinnon/watchclub:latest
         args:
         - server

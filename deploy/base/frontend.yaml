@@ -37,6 +37,8 @@ spec:
         app: watchclub
         component: frontend
     spec:
+      imagePullSecrets:
+      - name: ghcr-credentials
       containers:
       - name: nginx
         image: ghcr.io/cartermckinnon/watchclub/ui:latest

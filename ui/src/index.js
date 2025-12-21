@@ -1,4 +1,3 @@
-// Import generated protobuf messages and service client
 const {WatchClubServiceClient} = require('./api/v1_grpc_web_pb.js');
 const {
     CreateUserRequest,
@@ -14,8 +13,7 @@ const {
 
 const {Timestamp} = require('google-protobuf/google/protobuf/timestamp_pb.js');
 
-// Initialize the gRPC-Web client
-const client = new WatchClubServiceClient('http://localhost:8080', null, null);
+const client = new WatchClubServiceClient(window.location.origin, null, null);
 
 // ===== STATE MANAGEMENT =====
 const state = {
@@ -154,8 +152,8 @@ function renderHomePage() {
     content.innerHTML = `
         <div class="home-page">
             <header class="page-header">
-                <h1>🎬 Welcome to WatchClub</h1>
-                <p>Coordinate movie watching with your friends</p>
+                <h1>Lights, camera, action!</h1>
+                <p>WatchClub helps you watch stuff together.</p>
             </header>
 
             ${!state.currentUser ? `
@@ -167,7 +165,7 @@ function renderHomePage() {
                         <button onclick="createUserAccount()">Create Account</button>
                     </div>
                     <p style="margin-top: 1rem; text-align: center;">
-                        <a href="#/recover" class="btn-link">Already have an account? Recover it</a>
+                        <a href="#/recover" class="btn-link">Already have an account? Log in</a>
                     </p>
                     <div id="userError" class="error-message"></div>
                 </div>
@@ -389,20 +387,20 @@ function renderClubDetailPage(params) {
             </div>
 
             <div class="card">
-                <h3>Movie Picks (${picks.length})</h3>
+                <h3>Picks (${picks.length})</h3>
                 ${!userPick ? `
-                    <p>You haven't added your movie pick yet.</p>
-                    <a href="#/club/${clubId}/add-movie" class="btn">Add Your Pick</a>
+                    <p>You haven't added your picks yet.</p>
+                    <a href="#/club/${clubId}/add-pick" class="btn">Add A Pick</a>
                 ` : `
                     <p class="success-message">✓ You've added your pick: <strong>${escapeHtml(userPick.getTitle())}</strong></p>
                 `}
 
                 ${picks.length > 0 ? `
-                    <div class="movie-list">
+                    <div class="pick-list">
                         ${picks.map(p => `
-                            <div class="movie-item">
+                            <div class="pick-item">
                                 <strong>${escapeHtml(p.getTitle())}</strong> ${p.getYear() ? `(${p.getYear()})` : ''}
-                                ${p.getNotes() ? `<p class="movie-notes">${escapeHtml(p.getNotes())}</p>` : ''}
+                                ${p.getNotes() ? `<p class="pick-notes">${escapeHtml(p.getNotes())}</p>` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -430,8 +428,8 @@ function renderClubDetailPage(params) {
     });
 }
 
-// Add Movie Page
-function renderAddMoviePage(params) {
+// Add Pick Page
+function renderAddPickPage(params) {
     const content = document.getElementById('app-content');
     const clubId = params.clubId;
 
@@ -441,26 +439,26 @@ function renderAddMoviePage(params) {
     }
 
     content.innerHTML = `
-        <div class="add-movie-page">
+        <div class="add-pick-page">
             <div class="card">
-                <h1>Add Your Movie Pick</h1>
+                <h1>Add A Pick</h1>
                 <div class="form-group">
-                    <label>Movie Title *</label>
-                    <input type="text" id="movieTitle" placeholder="e.g., The Shawshank Redemption">
+                    <label>Title *</label>
+                    <input type="text" id="title" placeholder="e.g., The Shawshank Redemption">
 
                     <label>Year</label>
-                    <input type="number" id="movieYear" placeholder="e.g., 1994">
+                    <input type="number" id="year" placeholder="e.g., 1994">
 
                     <label>Why did you pick this?</label>
-                    <textarea id="movieNotes" rows="3" placeholder="Optional notes..."></textarea>
+                    <textarea id="notes" rows="3" placeholder="Optional notes..."></textarea>
                 </div>
 
                 <div class="button-group">
-                    <button onclick="addMoviePickAction('${clubId}')" class="btn primary">Add Pick</button>
+                    <button onclick="addPickAction('${clubId}')" class="btn primary">Add Pick</button>
                     <a href="#/club/${clubId}" class="btn-secondary">Cancel</a>
                 </div>
 
-                <div id="addMovieError" class="error-message"></div>
+                <div id="addPickError" class="error-message"></div>
             </div>
         </div>
     `;
@@ -610,14 +608,14 @@ function performJoin(clubId, errorEl) {
     });
 }
 
-function addMoviePickAction(clubId) {
-    const title = document.getElementById('movieTitle').value.trim();
-    const year = parseInt(document.getElementById('movieYear').value);
-    const notes = document.getElementById('movieNotes').value.trim();
-    const errorEl = document.getElementById('addMovieError');
+function addPickAction(clubId) {
+    const title = document.getElementById('title').value.trim();
+    const year = parseInt(document.getElementById('year').value);
+    const notes = document.getElementById('notes').value.trim();
+    const errorEl = document.getElementById('addPickError');
 
     if (!title) {
-        errorEl.textContent = 'Please enter a movie title';
+        errorEl.textContent = 'Please enter a title';
         errorEl.style.display = 'block';
         return;
     }
@@ -706,7 +704,7 @@ window.createUserAccount = createUserAccount;
 window.createClub = createClub;
 window.joinClubByCode = joinClubByCode;
 window.joinClubAction = joinClubAction;
-window.addMoviePickAction = addMoviePickAction;
+window.addPickAction = addPickAction;
 window.startClubAction = startClubAction;
 window.copyShareLink = copyShareLink;
 window.logout = logout;
@@ -810,7 +808,7 @@ router.register('/login/:userId', renderLoginPage);
 router.register('/club/:clubId/join', renderJoinPage);
 router.register('/my-clubs', renderMyClubsPage);
 router.register('/club/:clubId', renderClubDetailPage);
-router.register('/club/:clubId/add-movie', renderAddMoviePage);
+router.register('/club/:clubId/add-pick', renderAddPickPage);
 
 // Start router
 router.init();

@@ -1,5 +1,52 @@
 # Deploying on Kubernetes
 
+## Prerequisites
+
+### Image Pull Secrets for Private GHCR Images
+
+Since the container images are hosted in a private GitHub Container Registry, you need to create image pull secrets in each namespace.
+
+**1. Create a GitHub Personal Access Token (PAT):**
+- Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+- Click "Generate new token (classic)"
+- Give it a descriptive name (e.g., "k8s-watchclub-pull")
+- Select scope: `read:packages`
+- Click "Generate token" and copy it
+
+**2. Create the secret in Kubernetes:**
+
+For development:
+```bash
+kubectl create secret docker-registry ghcr-credentials \
+  --docker-server=ghcr.io \
+  --docker-username=<YOUR_GITHUB_USERNAME> \
+  --docker-password=<YOUR_PAT> \
+  --docker-email=<YOUR_EMAIL> \
+  -n watchclub-dev
+```
+
+For production:
+```bash
+kubectl create secret docker-registry ghcr-credentials \
+  --docker-server=ghcr.io \
+  --docker-username=<YOUR_GITHUB_USERNAME> \
+  --docker-password=<YOUR_PAT> \
+  --docker-email=<YOUR_EMAIL> \
+  -n watchclub
+```
+
+## Deploy NGINX ingress controller
+
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install ingress-nginx ingress-nginx/ingress-nginx
+```
+
+---
+
+## Deploying
+
 ### Development
 ```bash
 kubectl apply -k deploy/overlays/dev

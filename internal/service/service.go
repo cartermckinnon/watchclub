@@ -11,24 +11,24 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	v1 "github.com/cartermckinnon/watchclub/internal/api/v1"
-	"github.com/cartermckinnon/watchclub/internal/email"
+	"github.com/cartermckinnon/watchclub/internal/mail"
 	"github.com/cartermckinnon/watchclub/internal/storage"
 )
 
 // WatchClubService implements the WatchClubServiceServer interface
 type WatchClubService struct {
 	v1.UnimplementedWatchClubServiceServer
-	storage     storage.Storage
-	emailSender email.Sender
-	baseURL     string
+	storage    storage.Storage
+	mailSender mail.Sender
+	baseURL    string
 }
 
 // New creates a new WatchClubService
-func New(store storage.Storage, emailSender email.Sender, baseURL string) *WatchClubService {
+func New(store storage.Storage, mailSender mail.Sender, baseURL string) *WatchClubService {
 	return &WatchClubService{
-		storage:     store,
-		emailSender: emailSender,
-		baseURL:     baseURL,
+		storage:    store,
+		mailSender: mailSender,
+		baseURL:    baseURL,
 	}
 }
 
@@ -304,29 +304,26 @@ func (s *WatchClubService) GetWeeklyAssignments(ctx context.Context, req *v1.Get
 	}, nil
 }
 
-// SendRecoveryEmail sends an account recovery email
-func (s *WatchClubService) SendRecoveryEmail(ctx context.Context, req *v1.SendRecoveryEmailRequest) (*v1.SendRecoveryEmailResponse, error) {
+// SendLoginEmail sends an account login email
+func (s *WatchClubService) SendLoginEmail(ctx context.Context, req *v1.SendLoginEmailRequest) (*v1.SendLoginEmailResponse, error) {
 	if req.Email == "" {
 		return nil, status.Error(codes.InvalidArgument, "email is required")
 	}
 
-	// Look up user by email
+	// response is always the same
+	response := v1.SendLoginEmailResponse{
+		Success: true,
+		Message: "If an account with that email exists, a login link has been sent.",
+	}
+
 	user, err := s.storage.GetUserByEmail(ctx, req.Email)
 	if err != nil {
-		// Don't reveal whether the email exists or not for security
-		return &v1.SendRecoveryEmailResponse{
-			Success: true,
-			Message: "If an account with that email exists, a recovery link has been sent.",
-		}, nil
+		return &response, nil
 	}
 
-	// Send recovery email
-	if err := s.emailSender.SendRecoveryEmail(user.Email, user.Name, user.Id, s.baseURL); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to send recovery email: %v", err)
+	if err := s.mailSender.SendLogin(user.Email, user.Name, user.Id, s.baseURL); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to send login email: %v", err)
 	}
 
-	return &v1.SendRecoveryEmailResponse{
-		Success: true,
-		Message: "If an account with that email exists, a recovery link has been sent.",
-	}, nil
+	return &response, nil
 }

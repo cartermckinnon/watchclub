@@ -568,61 +568,61 @@ proto.watchclub.WatchClubServicePromiseClient.prototype.getWeeklyAssignments =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
- *   !proto.watchclub.SendRecoveryEmailRequest,
- *   !proto.watchclub.SendRecoveryEmailResponse>}
+ *   !proto.watchclub.SendLoginEmailRequest,
+ *   !proto.watchclub.SendLoginEmailResponse>}
  */
-const methodDescriptor_WatchClubService_SendRecoveryEmail = new grpc.web.MethodDescriptor(
-  '/watchclub.WatchClubService/SendRecoveryEmail',
+const methodDescriptor_WatchClubService_SendLoginEmail = new grpc.web.MethodDescriptor(
+  '/watchclub.WatchClubService/SendLoginEmail',
   grpc.web.MethodType.UNARY,
-  proto.watchclub.SendRecoveryEmailRequest,
-  proto.watchclub.SendRecoveryEmailResponse,
+  proto.watchclub.SendLoginEmailRequest,
+  proto.watchclub.SendLoginEmailResponse,
   /**
-   * @param {!proto.watchclub.SendRecoveryEmailRequest} request
+   * @param {!proto.watchclub.SendLoginEmailRequest} request
    * @return {!Uint8Array}
    */
   function(request) {
     return request.serializeBinary();
   },
-  proto.watchclub.SendRecoveryEmailResponse.deserializeBinary
+  proto.watchclub.SendLoginEmailResponse.deserializeBinary
 );
 
 
 /**
- * @param {!proto.watchclub.SendRecoveryEmailRequest} request The
+ * @param {!proto.watchclub.SendLoginEmailRequest} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.RpcError, ?proto.watchclub.SendRecoveryEmailResponse)}
+ * @param {function(?grpc.web.RpcError, ?proto.watchclub.SendLoginEmailResponse)}
  *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.watchclub.SendRecoveryEmailResponse>|undefined}
+ * @return {!grpc.web.ClientReadableStream<!proto.watchclub.SendLoginEmailResponse>|undefined}
  *     The XHR Node Readable Stream
  */
-proto.watchclub.WatchClubServiceClient.prototype.sendRecoveryEmail =
+proto.watchclub.WatchClubServiceClient.prototype.sendLoginEmail =
     function(request, metadata, callback) {
   return this.client_.rpcCall(this.hostname_ +
-      '/watchclub.WatchClubService/SendRecoveryEmail',
+      '/watchclub.WatchClubService/SendLoginEmail',
       request,
       metadata || {},
-      methodDescriptor_WatchClubService_SendRecoveryEmail,
+      methodDescriptor_WatchClubService_SendLoginEmail,
       callback);
 };
 
 
 /**
- * @param {!proto.watchclub.SendRecoveryEmailRequest} request The
+ * @param {!proto.watchclub.SendLoginEmailRequest} request The
  *     request proto
  * @param {?Object<string, string>=} metadata User defined
  *     call metadata
- * @return {!Promise<!proto.watchclub.SendRecoveryEmailResponse>}
+ * @return {!Promise<!proto.watchclub.SendLoginEmailResponse>}
  *     Promise that resolves to the response
  */
-proto.watchclub.WatchClubServicePromiseClient.prototype.sendRecoveryEmail =
+proto.watchclub.WatchClubServicePromiseClient.prototype.sendLoginEmail =
     function(request, metadata) {
   return this.client_.unaryCall(this.hostname_ +
-      '/watchclub.WatchClubService/SendRecoveryEmail',
+      '/watchclub.WatchClubService/SendLoginEmail',
       request,
       metadata || {},
-      methodDescriptor_WatchClubService_SendRecoveryEmail);
+      methodDescriptor_WatchClubService_SendLoginEmail);
 };
 
 

@@ -14,7 +14,7 @@ import (
 
 	v1 "github.com/cartermckinnon/watchclub/internal/api/v1"
 	"github.com/cartermckinnon/watchclub/internal/cli"
-	"github.com/cartermckinnon/watchclub/internal/email"
+	"github.com/cartermckinnon/watchclub/internal/mail"
 	"github.com/cartermckinnon/watchclub/internal/service"
 	"github.com/cartermckinnon/watchclub/internal/storage"
 )
@@ -45,7 +45,7 @@ func (sc *serverCommand) Run(logger *zap.Logger, opts *cli.GlobalOptions) error 
 	store := storage.NewMemoryStorage()
 
 	// Create email sender
-	emailSender := email.New(email.Config{
+	emailSender := mail.New(mail.Config{
 		DevelopmentMode: true,
 		BaseURL:         "http://localhost:3000/",
 		Logger:          logger,

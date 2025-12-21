@@ -38,8 +38,8 @@ type WatchClubServiceClient interface {
 	StartClub(ctx context.Context, in *StartClubRequest, opts ...grpc.CallOption) (*StartClubResponse, error)
 	// GetWeeklyAssignments gets the weekly viewing schedule for a club
 	GetWeeklyAssignments(ctx context.Context, in *GetWeeklyAssignmentsRequest, opts ...grpc.CallOption) (*GetWeeklyAssignmentsResponse, error)
-	// SendRecoveryEmail sends an account recovery email with a login link
-	SendRecoveryEmail(ctx context.Context, in *SendRecoveryEmailRequest, opts ...grpc.CallOption) (*SendRecoveryEmailResponse, error)
+	// SendLoginEmail sends an account login email
+	SendLoginEmail(ctx context.Context, in *SendLoginEmailRequest, opts ...grpc.CallOption) (*SendLoginEmailResponse, error)
 }
 
 type watchClubServiceClient struct {
@@ -122,9 +122,9 @@ func (c *watchClubServiceClient) GetWeeklyAssignments(ctx context.Context, in *G
 	return out, nil
 }
 
-func (c *watchClubServiceClient) SendRecoveryEmail(ctx context.Context, in *SendRecoveryEmailRequest, opts ...grpc.CallOption) (*SendRecoveryEmailResponse, error) {
-	out := new(SendRecoveryEmailResponse)
-	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/SendRecoveryEmail", in, out, opts...)
+func (c *watchClubServiceClient) SendLoginEmail(ctx context.Context, in *SendLoginEmailRequest, opts ...grpc.CallOption) (*SendLoginEmailResponse, error) {
+	out := new(SendLoginEmailResponse)
+	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/SendLoginEmail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -151,8 +151,8 @@ type WatchClubServiceServer interface {
 	StartClub(context.Context, *StartClubRequest) (*StartClubResponse, error)
 	// GetWeeklyAssignments gets the weekly viewing schedule for a club
 	GetWeeklyAssignments(context.Context, *GetWeeklyAssignmentsRequest) (*GetWeeklyAssignmentsResponse, error)
-	// SendRecoveryEmail sends an account recovery email with a login link
-	SendRecoveryEmail(context.Context, *SendRecoveryEmailRequest) (*SendRecoveryEmailResponse, error)
+	// SendLoginEmail sends an account login email
+	SendLoginEmail(context.Context, *SendLoginEmailRequest) (*SendLoginEmailResponse, error)
 	mustEmbedUnimplementedWatchClubServiceServer()
 }
 
@@ -184,8 +184,8 @@ func (UnimplementedWatchClubServiceServer) StartClub(context.Context, *StartClub
 func (UnimplementedWatchClubServiceServer) GetWeeklyAssignments(context.Context, *GetWeeklyAssignmentsRequest) (*GetWeeklyAssignmentsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetWeeklyAssignments not implemented")
 }
-func (UnimplementedWatchClubServiceServer) SendRecoveryEmail(context.Context, *SendRecoveryEmailRequest) (*SendRecoveryEmailResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendRecoveryEmail not implemented")
+func (UnimplementedWatchClubServiceServer) SendLoginEmail(context.Context, *SendLoginEmailRequest) (*SendLoginEmailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendLoginEmail not implemented")
 }
 func (UnimplementedWatchClubServiceServer) mustEmbedUnimplementedWatchClubServiceServer() {}
 
@@ -344,20 +344,20 @@ func _WatchClubService_GetWeeklyAssignments_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _WatchClubService_SendRecoveryEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendRecoveryEmailRequest)
+func _WatchClubService_SendLoginEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendLoginEmailRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WatchClubServiceServer).SendRecoveryEmail(ctx, in)
+		return srv.(WatchClubServiceServer).SendLoginEmail(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/watchclub.WatchClubService/SendRecoveryEmail",
+		FullMethod: "/watchclub.WatchClubService/SendLoginEmail",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WatchClubServiceServer).SendRecoveryEmail(ctx, req.(*SendRecoveryEmailRequest))
+		return srv.(WatchClubServiceServer).SendLoginEmail(ctx, req.(*SendLoginEmailRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -402,8 +402,8 @@ var WatchClubService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _WatchClubService_GetWeeklyAssignments_Handler,
 		},
 		{
-			MethodName: "SendRecoveryEmail",
-			Handler:    _WatchClubService_SendRecoveryEmail_Handler,
+			MethodName: "SendLoginEmail",
+			Handler:    _WatchClubService_SendLoginEmail_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

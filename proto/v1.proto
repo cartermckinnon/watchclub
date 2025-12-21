@@ -124,13 +124,13 @@ message GetWeeklyAssignmentsResponse {
   repeated WeeklyAssignment assignments = 1;
 }
 
-// SendRecoveryEmailRequest is the request to send an account recovery email
-message SendRecoveryEmailRequest {
+// SendLoginEmailRequest is the request to send an account login email
+message SendLoginEmailRequest {
   string email = 1;
 }
 
-// SendRecoveryEmailResponse is the response after sending a recovery email
-message SendRecoveryEmailResponse {
+// SendLoginEmailResponse is the response after sending a login email
+message SendLoginEmailResponse {
   bool success = 1;
   string message = 2;
 }
@@ -171,6 +171,6 @@ service WatchClubService {
   // GetWeeklyAssignments gets the weekly viewing schedule for a club
   rpc GetWeeklyAssignments(GetWeeklyAssignmentsRequest) returns (GetWeeklyAssignmentsResponse);
 
-  // SendRecoveryEmail sends an account recovery email with a login link
-  rpc SendRecoveryEmail(SendRecoveryEmailRequest) returns (SendRecoveryEmailResponse);
+  // SendLoginEmail sends an account login email
+  rpc SendLoginEmail(SendLoginEmailRequest) returns (SendLoginEmailResponse);
 }

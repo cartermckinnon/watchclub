@@ -1,15 +1,10 @@
-package email
+package mail
 
 import (
 	"fmt"
 
 	"go.uber.org/zap"
 )
-
-// Sender is an interface for sending emails
-type Sender interface {
-	SendRecoveryEmail(to, userName, userID, baseURL string) error
-}
 
 // Config holds email configuration
 type Config struct {
@@ -41,7 +36,7 @@ type devSender struct {
 	logger  *zap.Logger
 }
 
-func (d *devSender) SendRecoveryEmail(to, userName, userID, baseURL string) error {
+func (d *devSender) SendLogin(to, userName, userID, baseURL string) error {
 	if baseURL == "" {
 		baseURL = d.baseURL
 	}

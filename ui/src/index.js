@@ -8,7 +8,7 @@ const {
     GetClubRequest,
     StartClubRequest,
     GetWeeklyAssignmentsRequest,
-    SendRecoveryEmailRequest
+    SendLoginEmailRequest
 } = require('./api/v1_pb.js');
 
 const {Timestamp} = require('google-protobuf/google/protobuf/timestamp_pb.js');
@@ -165,7 +165,7 @@ function renderHomePage() {
                         <button onclick="createUserAccount()">Create Account</button>
                     </div>
                     <p style="margin-top: 1rem; text-align: center;">
-                        <a href="#/recover" class="btn-link">Already have an account? Log in</a>
+                        <a href="#/login" class="btn-link">Already have an account? Log in</a>
                     </p>
                     <div id="userError" class="error-message"></div>
                 </div>
@@ -713,19 +713,19 @@ window.logout = logout;
 state.loadUser();
 state.loadClubs();
 
-// Recover Account Page
-function renderRecoverPage() {
+// Login Page
+function renderLoginPage() {
     const content = document.getElementById('app-content');
     content.innerHTML = `
-        <div class="recover-page">
+        <div class="login-page">
             <div class="card">
-                <h1>Recover Your Account</h1>
+                <h1>Log in to your account</h1>
                 <p>Enter your email address and we'll send you a link to log back in.</p>
                 <div class="form-group">
-                    <input type="text" id="recoveryEmail" placeholder="Your email">
-                    <button onclick="sendRecoveryEmail()">Send Recovery Link</button>
+                    <input type="text" id="loginEmail" placeholder="Your email">
+                    <button onclick="sendLoginEmail()">Send Login Link</button>
                 </div>
-                <div id="recoveryResult" class="result"></div>
+                <div id="loginResult" class="result"></div>
                 <p style="margin-top: 1rem; text-align: center;">
                     <a href="#/" class="btn-link">← Back to home</a>
                 </p>
@@ -766,9 +766,9 @@ function renderLoginPage(params) {
     });
 }
 
-function sendRecoveryEmail() {
-    const email = document.getElementById('recoveryEmail').value.trim();
-    const resultEl = document.getElementById('recoveryResult');
+function sendLoginEmail() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const resultEl = document.getElementById('loginResult');
 
     if (!email) {
         resultEl.innerHTML = 'Please enter your email';
@@ -777,10 +777,10 @@ function sendRecoveryEmail() {
         return;
     }
 
-    const request = new SendRecoveryEmailRequest();
+    const request = new SendLoginEmailRequest();
     request.setEmail(email);
 
-    client.sendRecoveryEmail(request, {}, (err, response) => {
+    client.sendLoginEmail(request, {}, (err, response) => {
         if (err) {
             resultEl.innerHTML = `Error: ${err.message}`;
             resultEl.className = 'result error';
@@ -791,7 +791,6 @@ function sendRecoveryEmail() {
         resultEl.innerHTML = `
             <strong>Check your email!</strong><br>
             ${response.getMessage()}<br><br>
-            <em>In development mode, the recovery link is printed to the server console.</em>
         `;
         resultEl.className = 'result success';
         resultEl.style.display = 'block';
@@ -799,11 +798,11 @@ function sendRecoveryEmail() {
 }
 
 // Make globally available
-window.sendRecoveryEmail = sendRecoveryEmail;
+window.sendLoginEmail = sendLoginEmail;
 
 // Register routes
 router.register('/', renderHomePage);
-router.register('/recover', renderRecoverPage);
+router.register('/login', renderLoginPage);
 router.register('/login/:userId', renderLoginPage);
 router.register('/club/:clubId/join', renderJoinPage);
 router.register('/my-clubs', renderMyClubsPage);

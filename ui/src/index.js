@@ -141,7 +141,7 @@ const router = {
         if (state.currentUser) {
             navLinks.innerHTML = `
                 <a href="#/my-clubs">My Clubs</a>
-                <a href="#/" onclick="logout(); return false;">Logout (${escapeHtml(state.currentUser.name)})</a>
+                <a href="#/" onclick="logout(); return false;">Logout</a>
             `;
         } else {
             navLinks.innerHTML = '';
@@ -156,10 +156,12 @@ function renderHomePage() {
     const content = document.getElementById('app-content');
     content.innerHTML = `
         <div class="home-page">
-            <header class="page-header">
-                <h1>Lights, camera, action!</h1>
-                <p>WatchClub helps you watch stuff together.</p>
-            </header>
+            ${state.clubs.length === 0 ? `
+                <header class="page-header">
+                    <h2>Lights, camera, action!</h2>
+                    <p>WatchClub helps you watch stuff together.</p>
+                </header>
+            ` : ''}
 
             ${!state.currentUser ? `
                 <div class="card">
@@ -478,7 +480,7 @@ function renderClubDetailPage(params) {
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h3 style="margin: 0;">Schedule</h3>
-                        <button onclick="downloadCalendar('${clubId}')" class="btn-secondary">Download Calendar</button>
+                        <button onclick="downloadCalendar('${clubId}')" class="btn-secondary">Download</button>
                     </div>
                     <div id="scheduleContent">Loading schedule...</div>
                 </div>
@@ -520,8 +522,8 @@ function renderAddPickPage(params) {
                 </div>
 
                 <div class="button-group">
-                    <button onclick="addPickAction('${clubId}')" class="btn primary">Add Pick</button>
-                    <a href="#/club/${clubId}" class="btn-secondary">Cancel</a>
+                    <button onclick="addPickAction('${clubId}')">Add Pick</button>
+                    <a href="#/club/${clubId}" class="btn btn-secondary">Cancel</a>
                 </div>
 
                 <div id="addPickError" class="error-message"></div>

@@ -18,6 +18,13 @@ module.exports = {
         publicPath: "/css",
       },
     ],
+    proxy: [
+      {
+        context: ['/watchclub.WatchClubService'],
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    ],
   },
   plugins: [
     new HtmlWebpackPlugin({

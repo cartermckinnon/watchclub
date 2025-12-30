@@ -8,22 +8,53 @@ import (
 
 // Config holds email configuration
 type Config struct {
-	// For now, just use development mode
-	// In production, this would include SMTP settings
+	// DevelopmentMode logs emails to console instead of sending
 	DevelopmentMode bool
-	BaseURL         string
-	Logger          *zap.Logger
+
+	// BaseURL is the base URL for generating login links
+	BaseURL string
+
+	// Resend configuration
+	ResendAPIKey   string
+	ResendFrom     string // Email address to send from (e.g., "you@yourdomain.com")
+	ResendFromName string // Optional display name (e.g., "WatchClub")
+
+	Logger *zap.Logger
 }
 
 // New creates a new email sender
 func New(config Config) Sender {
+	// Use development mode if explicitly enabled
 	if config.DevelopmentMode {
 		return &devSender{
 			baseURL: config.BaseURL,
 			logger:  config.Logger,
 		}
 	}
-	// TODO: Implement SMTP sender for production
+
+	// Use Resend if API key is provided
+	if config.ResendAPIKey != "" {
+		sender, err := newResendSender(
+			config.ResendAPIKey,
+			config.ResendFrom,
+			config.ResendFromName,
+			config.BaseURL,
+			config.Logger,
+		)
+		if err != nil {
+			config.Logger.Error("Failed to create Resend sender, falling back to dev mode",
+				zap.Error(err),
+			)
+			return &devSender{
+				baseURL: config.BaseURL,
+				logger:  config.Logger,
+			}
+		}
+		return sender
+	}
+
+	// Default to development mode if no email provider is configured
+	config.Logger.Warn("No email provider configured, using development mode (console logging)")
 	return &devSender{
 		baseURL: config.BaseURL,
 		logger:  config.Logger,

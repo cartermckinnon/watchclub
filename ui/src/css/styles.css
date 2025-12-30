@@ -214,6 +214,17 @@ body {
     border-radius: 8px;
 }
 
+a.schedule-item {
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.3s, transform 0.2s;
+}
+
+a.schedule-item:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
 .week-number {
     flex-shrink: 0;
     width: 60px;
@@ -301,6 +312,7 @@ body {
 input[type="text"],
 input[type="date"],
 input[type="number"],
+input[type="url"],
 textarea {
     padding: 0.75rem 1rem;
     border: 2px solid #e0e0e0;
@@ -313,6 +325,7 @@ textarea {
 input[type="text"]:focus,
 input[type="date"]:focus,
 input[type="number"]:focus,
+input[type="url"]:focus,
 textarea:focus {
     outline: none;
     border-color: #667eea;
@@ -368,6 +381,11 @@ button.primary:hover, .btn.primary:hover {
 
 .btn-secondary:hover {
     background: #f8f9fa;
+    transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
 }
 
 .btn-link {

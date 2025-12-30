@@ -32,14 +32,18 @@ type WatchClubServiceClient interface {
 	JoinClub(ctx context.Context, in *JoinClubRequest, opts ...grpc.CallOption) (*JoinClubResponse, error)
 	// AddPick adds a pick to a club
 	AddPick(ctx context.Context, in *AddPickRequest, opts ...grpc.CallOption) (*AddPickResponse, error)
+	// DeletePick removes a pick from a club (only allowed before club starts)
+	DeletePick(ctx context.Context, in *DeletePickRequest, opts ...grpc.CallOption) (*DeletePickResponse, error)
 	// GetClub gets details about a club including members and their picks
 	GetClub(ctx context.Context, in *GetClubRequest, opts ...grpc.CallOption) (*GetClubResponse, error)
 	// StartClub shuffles all picks and generates the weekly viewing schedule
 	StartClub(ctx context.Context, in *StartClubRequest, opts ...grpc.CallOption) (*StartClubResponse, error)
-	// GetWeeklyAssignments gets the weekly viewing schedule for a club
-	GetWeeklyAssignments(ctx context.Context, in *GetWeeklyAssignmentsRequest, opts ...grpc.CallOption) (*GetWeeklyAssignmentsResponse, error)
+	// GetScheduledPicks gets the schedule for a club
+	GetScheduledPicks(ctx context.Context, in *GetScheduledPicksRequest, opts ...grpc.CallOption) (*GetScheduledPicksResponse, error)
 	// SendLoginEmail sends an account login email
 	SendLoginEmail(ctx context.Context, in *SendLoginEmailRequest, opts ...grpc.CallOption) (*SendLoginEmailResponse, error)
+	// GetClubCalendar generates an ICS calendar file for a club's schedule
+	GetClubCalendar(ctx context.Context, in *GetClubCalendarRequest, opts ...grpc.CallOption) (*GetClubCalendarResponse, error)
 }
 
 type watchClubServiceClient struct {
@@ -95,6 +99,15 @@ func (c *watchClubServiceClient) AddPick(ctx context.Context, in *AddPickRequest
 	return out, nil
 }
 
+func (c *watchClubServiceClient) DeletePick(ctx context.Context, in *DeletePickRequest, opts ...grpc.CallOption) (*DeletePickResponse, error) {
+	out := new(DeletePickResponse)
+	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/DeletePick", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *watchClubServiceClient) GetClub(ctx context.Context, in *GetClubRequest, opts ...grpc.CallOption) (*GetClubResponse, error) {
 	out := new(GetClubResponse)
 	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/GetClub", in, out, opts...)
@@ -113,9 +126,9 @@ func (c *watchClubServiceClient) StartClub(ctx context.Context, in *StartClubReq
 	return out, nil
 }
 
-func (c *watchClubServiceClient) GetWeeklyAssignments(ctx context.Context, in *GetWeeklyAssignmentsRequest, opts ...grpc.CallOption) (*GetWeeklyAssignmentsResponse, error) {
-	out := new(GetWeeklyAssignmentsResponse)
-	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/GetWeeklyAssignments", in, out, opts...)
+func (c *watchClubServiceClient) GetScheduledPicks(ctx context.Context, in *GetScheduledPicksRequest, opts ...grpc.CallOption) (*GetScheduledPicksResponse, error) {
+	out := new(GetScheduledPicksResponse)
+	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/GetScheduledPicks", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +138,15 @@ func (c *watchClubServiceClient) GetWeeklyAssignments(ctx context.Context, in *G
 func (c *watchClubServiceClient) SendLoginEmail(ctx context.Context, in *SendLoginEmailRequest, opts ...grpc.CallOption) (*SendLoginEmailResponse, error) {
 	out := new(SendLoginEmailResponse)
 	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/SendLoginEmail", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *watchClubServiceClient) GetClubCalendar(ctx context.Context, in *GetClubCalendarRequest, opts ...grpc.CallOption) (*GetClubCalendarResponse, error) {
+	out := new(GetClubCalendarResponse)
+	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/GetClubCalendar", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -145,14 +167,18 @@ type WatchClubServiceServer interface {
 	JoinClub(context.Context, *JoinClubRequest) (*JoinClubResponse, error)
 	// AddPick adds a pick to a club
 	AddPick(context.Context, *AddPickRequest) (*AddPickResponse, error)
+	// DeletePick removes a pick from a club (only allowed before club starts)
+	DeletePick(context.Context, *DeletePickRequest) (*DeletePickResponse, error)
 	// GetClub gets details about a club including members and their picks
 	GetClub(context.Context, *GetClubRequest) (*GetClubResponse, error)
 	// StartClub shuffles all picks and generates the weekly viewing schedule
 	StartClub(context.Context, *StartClubRequest) (*StartClubResponse, error)
-	// GetWeeklyAssignments gets the weekly viewing schedule for a club
-	GetWeeklyAssignments(context.Context, *GetWeeklyAssignmentsRequest) (*GetWeeklyAssignmentsResponse, error)
+	// GetScheduledPicks gets the schedule for a club
+	GetScheduledPicks(context.Context, *GetScheduledPicksRequest) (*GetScheduledPicksResponse, error)
 	// SendLoginEmail sends an account login email
 	SendLoginEmail(context.Context, *SendLoginEmailRequest) (*SendLoginEmailResponse, error)
+	// GetClubCalendar generates an ICS calendar file for a club's schedule
+	GetClubCalendar(context.Context, *GetClubCalendarRequest) (*GetClubCalendarResponse, error)
 	mustEmbedUnimplementedWatchClubServiceServer()
 }
 
@@ -175,17 +201,23 @@ func (UnimplementedWatchClubServiceServer) JoinClub(context.Context, *JoinClubRe
 func (UnimplementedWatchClubServiceServer) AddPick(context.Context, *AddPickRequest) (*AddPickResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddPick not implemented")
 }
+func (UnimplementedWatchClubServiceServer) DeletePick(context.Context, *DeletePickRequest) (*DeletePickResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeletePick not implemented")
+}
 func (UnimplementedWatchClubServiceServer) GetClub(context.Context, *GetClubRequest) (*GetClubResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClub not implemented")
 }
 func (UnimplementedWatchClubServiceServer) StartClub(context.Context, *StartClubRequest) (*StartClubResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartClub not implemented")
 }
-func (UnimplementedWatchClubServiceServer) GetWeeklyAssignments(context.Context, *GetWeeklyAssignmentsRequest) (*GetWeeklyAssignmentsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetWeeklyAssignments not implemented")
+func (UnimplementedWatchClubServiceServer) GetScheduledPicks(context.Context, *GetScheduledPicksRequest) (*GetScheduledPicksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetScheduledPicks not implemented")
 }
 func (UnimplementedWatchClubServiceServer) SendLoginEmail(context.Context, *SendLoginEmailRequest) (*SendLoginEmailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendLoginEmail not implemented")
+}
+func (UnimplementedWatchClubServiceServer) GetClubCalendar(context.Context, *GetClubCalendarRequest) (*GetClubCalendarResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClubCalendar not implemented")
 }
 func (UnimplementedWatchClubServiceServer) mustEmbedUnimplementedWatchClubServiceServer() {}
 
@@ -290,6 +322,24 @@ func _WatchClubService_AddPick_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WatchClubService_DeletePick_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeletePickRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WatchClubServiceServer).DeletePick(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/watchclub.WatchClubService/DeletePick",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WatchClubServiceServer).DeletePick(ctx, req.(*DeletePickRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _WatchClubService_GetClub_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetClubRequest)
 	if err := dec(in); err != nil {
@@ -326,20 +376,20 @@ func _WatchClubService_StartClub_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _WatchClubService_GetWeeklyAssignments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetWeeklyAssignmentsRequest)
+func _WatchClubService_GetScheduledPicks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetScheduledPicksRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WatchClubServiceServer).GetWeeklyAssignments(ctx, in)
+		return srv.(WatchClubServiceServer).GetScheduledPicks(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/watchclub.WatchClubService/GetWeeklyAssignments",
+		FullMethod: "/watchclub.WatchClubService/GetScheduledPicks",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WatchClubServiceServer).GetWeeklyAssignments(ctx, req.(*GetWeeklyAssignmentsRequest))
+		return srv.(WatchClubServiceServer).GetScheduledPicks(ctx, req.(*GetScheduledPicksRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -358,6 +408,24 @@ func _WatchClubService_SendLoginEmail_Handler(srv interface{}, ctx context.Conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WatchClubServiceServer).SendLoginEmail(ctx, req.(*SendLoginEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WatchClubService_GetClubCalendar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClubCalendarRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WatchClubServiceServer).GetClubCalendar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/watchclub.WatchClubService/GetClubCalendar",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WatchClubServiceServer).GetClubCalendar(ctx, req.(*GetClubCalendarRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -390,6 +458,10 @@ var WatchClubService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _WatchClubService_AddPick_Handler,
 		},
 		{
+			MethodName: "DeletePick",
+			Handler:    _WatchClubService_DeletePick_Handler,
+		},
+		{
 			MethodName: "GetClub",
 			Handler:    _WatchClubService_GetClub_Handler,
 		},
@@ -398,12 +470,16 @@ var WatchClubService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _WatchClubService_StartClub_Handler,
 		},
 		{
-			MethodName: "GetWeeklyAssignments",
-			Handler:    _WatchClubService_GetWeeklyAssignments_Handler,
+			MethodName: "GetScheduledPicks",
+			Handler:    _WatchClubService_GetScheduledPicks_Handler,
 		},
 		{
 			MethodName: "SendLoginEmail",
 			Handler:    _WatchClubService_SendLoginEmail_Handler,
+		},
+		{
+			MethodName: "GetClubCalendar",
+			Handler:    _WatchClubService_GetClubCalendar_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

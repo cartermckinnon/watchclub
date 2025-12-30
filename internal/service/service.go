@@ -84,13 +84,37 @@ func (s *WatchClubService) CreateClub(ctx context.Context, req *v1.CreateClubReq
 		return nil, status.Error(codes.InvalidArgument, "start_date is required")
 	}
 
+	// Validate max_picks_per_member
+	maxPicks := req.MaxPicksPerMember
+	if maxPicks < 0 {
+		return nil, status.Error(codes.InvalidArgument, "max_picks_per_member cannot be negative")
+	}
+	// Default to 1 if not specified (0 means unlimited for backward compatibility)
+	if maxPicks == 0 {
+		maxPicks = 1
+	}
+
+	// Validate schedule interval
+	scheduleQty := req.ScheduleIntervalQuantity
+	if scheduleQty <= 0 {
+		scheduleQty = 1 // Default to 1
+	}
+
+	scheduleUnit := req.ScheduleIntervalUnit
+	if scheduleUnit == v1.ScheduleIntervalUnit_SCHEDULE_INTERVAL_UNIT_UNSPECIFIED {
+		scheduleUnit = v1.ScheduleIntervalUnit_SCHEDULE_INTERVAL_UNIT_WEEKS // Default to weeks
+	}
+
 	club := &v1.Club{
-		Id:        uuid.New().String(),
-		Name:      req.Name,
-		MemberIds: []string{},
-		StartDate: req.StartDate,
-		Started:   false,
-		CreatedAt: timestamppb.Now(),
+		Id:                       uuid.New().String(),
+		Name:                     req.Name,
+		MemberIds:                []string{},
+		StartDate:                req.StartDate,
+		Started:                  false,
+		CreatedAt:                timestamppb.Now(),
+		MaxPicksPerMember:        maxPicks,
+		ScheduleIntervalQuantity: scheduleQty,
+		ScheduleIntervalUnit:     scheduleUnit,
 	}
 
 	if err := s.storage.CreateClub(ctx, club); err != nil {
@@ -153,14 +177,40 @@ func (s *WatchClubService) AddPick(ctx context.Context, req *v1.AddPickRequest) 
 		return nil, status.Error(codes.InvalidArgument, "title is required")
 	}
 
-	// Verify club exists
-	if _, err := s.storage.GetClub(ctx, req.ClubId); err != nil {
+	// Get club and verify it exists
+	club, err := s.storage.GetClub(ctx, req.ClubId)
+	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "club not found: %v", err)
+	}
+
+	// Check if club has already started
+	if club.Started {
+		return nil, status.Error(codes.FailedPrecondition, "cannot add picks after club has started")
 	}
 
 	// Verify user exists
 	if _, err := s.storage.GetUser(ctx, req.UserId); err != nil {
 		return nil, status.Errorf(codes.NotFound, "user not found: %v", err)
+	}
+
+	// Check if user has reached max picks (0 means unlimited)
+	if club.MaxPicksPerMember > 0 {
+		existingPicks, err := s.storage.ListPicks(ctx, req.ClubId)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to list picks: %v", err)
+		}
+
+		userPickCount := 0
+		for _, pick := range existingPicks {
+			if pick.UserId == req.UserId {
+				userPickCount++
+			}
+		}
+
+		if userPickCount >= int(club.MaxPicksPerMember) {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"user has already added maximum number of picks (%d)", club.MaxPicksPerMember)
+		}
 	}
 
 	pick := &v1.Pick{
@@ -170,6 +220,7 @@ func (s *WatchClubService) AddPick(ctx context.Context, req *v1.AddPickRequest) 
 		Title:     req.Title,
 		Year:      req.Year,
 		Notes:     req.Notes,
+		Link:      req.Link,
 		CreatedAt: timestamppb.Now(),
 	}
 
@@ -178,6 +229,44 @@ func (s *WatchClubService) AddPick(ctx context.Context, req *v1.AddPickRequest) 
 	}
 
 	return &v1.AddPickResponse{Pick: pick}, nil
+}
+
+// DeletePick removes a pick from a club (only allowed before club starts)
+func (s *WatchClubService) DeletePick(ctx context.Context, req *v1.DeletePickRequest) (*v1.DeletePickResponse, error) {
+	if req.PickId == "" {
+		return nil, status.Error(codes.InvalidArgument, "pick_id is required")
+	}
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	// Get the pick to verify ownership and club status
+	pick, err := s.storage.GetPick(ctx, req.PickId)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "pick not found: %v", err)
+	}
+
+	// Verify user owns this pick
+	if pick.UserId != req.UserId {
+		return nil, status.Error(codes.PermissionDenied, "you can only delete your own picks")
+	}
+
+	// Verify club hasn't started
+	club, err := s.storage.GetClub(ctx, pick.ClubId)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "club not found: %v", err)
+	}
+
+	if club.Started {
+		return nil, status.Error(codes.FailedPrecondition, "cannot delete picks after club has started")
+	}
+
+	// Delete the pick
+	if err := s.storage.DeletePick(ctx, req.PickId); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to delete pick: %v", err)
+	}
+
+	return &v1.DeletePickResponse{Success: true}, nil
 }
 
 // GetClub gets details about a club including members and their picks
@@ -247,22 +336,25 @@ func (s *WatchClubService) StartClub(ctx context.Context, req *v1.StartClubReque
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	})
 
-	// Create weekly assignments
-	assignments := make([]*v1.WeeklyAssignment, 0, len(shuffled))
+	// Create scheduled picks
+	assignments := make([]*v1.ScheduledPick, 0, len(shuffled))
 	startDate := club.StartDate.AsTime()
 
+	// Calculate interval duration based on club's schedule settings
+	intervalDuration := calculateIntervalDuration(club.ScheduleIntervalQuantity, club.ScheduleIntervalUnit)
+
 	for i, pick := range shuffled {
-		weekStart := startDate.Add(time.Duration(i) * 7 * 24 * time.Hour)
-		assignment := &v1.WeeklyAssignment{
-			Id:            uuid.New().String(),
-			ClubId:        req.ClubId,
-			WeekNumber:    int32(i + 1),
-			WeekStartDate: timestamppb.New(weekStart),
-			Pick:          pick,
+		periodStart := startDate.Add(intervalDuration * time.Duration(i))
+		assignment := &v1.ScheduledPick{
+			Id:             uuid.New().String(),
+			ClubId:         req.ClubId,
+			SequenceNumber: int32(i + 1),
+			StartDate:      timestamppb.New(periodStart),
+			Pick:           pick,
 		}
 
-		if err := s.storage.CreateWeeklyAssignment(ctx, assignment); err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to create weekly assignment: %v", err)
+		if err := s.storage.CreateScheduledPick(ctx, assignment); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to create scheduled pick: %v", err)
 		}
 
 		assignments = append(assignments, assignment)
@@ -283,8 +375,24 @@ func (s *WatchClubService) StartClub(ctx context.Context, req *v1.StartClubReque
 	}, nil
 }
 
-// GetWeeklyAssignments gets the weekly movie viewing schedule for a club
-func (s *WatchClubService) GetWeeklyAssignments(ctx context.Context, req *v1.GetWeeklyAssignmentsRequest) (*v1.GetWeeklyAssignmentsResponse, error) {
+// calculateIntervalDuration converts schedule settings to a time.Duration
+func calculateIntervalDuration(quantity int32, unit v1.ScheduleIntervalUnit) time.Duration {
+	switch unit {
+	case v1.ScheduleIntervalUnit_SCHEDULE_INTERVAL_UNIT_DAYS:
+		return time.Duration(quantity) * 24 * time.Hour
+	case v1.ScheduleIntervalUnit_SCHEDULE_INTERVAL_UNIT_WEEKS:
+		return time.Duration(quantity) * 7 * 24 * time.Hour
+	case v1.ScheduleIntervalUnit_SCHEDULE_INTERVAL_UNIT_MONTHS:
+		// Approximate: 30 days per month
+		return time.Duration(quantity) * 30 * 24 * time.Hour
+	default:
+		// Default to weeks
+		return time.Duration(quantity) * 7 * 24 * time.Hour
+	}
+}
+
+// GetScheduledPicks gets the schedule for a club
+func (s *WatchClubService) GetScheduledPicks(ctx context.Context, req *v1.GetScheduledPicksRequest) (*v1.GetScheduledPicksResponse, error) {
 	if req.ClubId == "" {
 		return nil, status.Error(codes.InvalidArgument, "club_id is required")
 	}
@@ -294,12 +402,12 @@ func (s *WatchClubService) GetWeeklyAssignments(ctx context.Context, req *v1.Get
 		return nil, status.Errorf(codes.NotFound, "club not found: %v", err)
 	}
 
-	assignments, err := s.storage.ListWeeklyAssignments(ctx, req.ClubId)
+	assignments, err := s.storage.ListScheduledPicks(ctx, req.ClubId)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get weekly assignments: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to get scheduled picks: %v", err)
 	}
 
-	return &v1.GetWeeklyAssignmentsResponse{
+	return &v1.GetScheduledPicksResponse{
 		Assignments: assignments,
 	}, nil
 }
@@ -326,4 +434,147 @@ func (s *WatchClubService) SendLoginEmail(ctx context.Context, req *v1.SendLogin
 	}
 
 	return &response, nil
+}
+
+// GetClubCalendar generates an ICS calendar file for a club's schedule
+func (s *WatchClubService) GetClubCalendar(ctx context.Context, req *v1.GetClubCalendarRequest) (*v1.GetClubCalendarResponse, error) {
+	if req.ClubId == "" {
+		return nil, status.Error(codes.InvalidArgument, "club_id is required")
+	}
+
+	club, err := s.storage.GetClub(ctx, req.ClubId)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "club not found: %v", err)
+	}
+
+	if !club.Started {
+		return nil, status.Error(codes.FailedPrecondition, "club must be started to generate calendar")
+	}
+
+	assignments, err := s.storage.ListScheduledPicks(ctx, req.ClubId)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list scheduled picks: %v", err)
+	}
+
+	// Get members to include picker names
+	users, err := s.storage.ListUsers(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list users: %v", err)
+	}
+	userMap := make(map[string]*v1.User)
+	for _, user := range users {
+		userMap[user.Id] = user
+	}
+
+	icsData := generateICSCalendar(club, assignments, userMap, s.baseURL)
+
+	return &v1.GetClubCalendarResponse{
+		IcsData: icsData,
+	}, nil
+}
+
+// generateICSCalendar creates an ICS calendar file from scheduled picks
+func generateICSCalendar(club *v1.Club, assignments []*v1.ScheduledPick, userMap map[string]*v1.User, baseURL string) string {
+	var ics string
+
+	// Calendar header
+	ics += "BEGIN:VCALENDAR\r\n"
+	ics += "VERSION:2.0\r\n"
+	ics += "PRODID:-//WatchClub//Schedule//EN\r\n"
+	ics += "CALSCALE:GREGORIAN\r\n"
+	ics += "METHOD:PUBLISH\r\n"
+	ics += "X-WR-CALNAME:" + escapeICSText(club.Name) + " - Schedule\r\n"
+	ics += "X-WR-TIMEZONE:UTC\r\n"
+
+	// Calculate interval duration
+	intervalDuration := calculateIntervalDuration(club.ScheduleIntervalQuantity, club.ScheduleIntervalUnit)
+
+	// Add events for each assignment
+	for _, assignment := range assignments {
+		pick := assignment.Pick
+		startDate := assignment.StartDate.AsTime()
+		endDate := startDate.Add(intervalDuration)
+
+		// Get picker name
+		pickerName := "Unknown"
+		if user, ok := userMap[pick.UserId]; ok {
+			pickerName = user.Name
+		}
+
+		// Build description
+		description := "Picked by " + pickerName
+		if pick.Notes != "" {
+			description += "\\n\\nNotes: " + escapeICSText(pick.Notes)
+		}
+		description += "\\n\\nView details: " + baseURL + "/#/club/" + club.Id + "/pick/" + pick.Id
+
+		// Event
+		ics += "BEGIN:VEVENT\r\n"
+		ics += "UID:" + pick.Id + "@watchclub\r\n"
+		ics += "DTSTAMP:" + formatICSDateTime(time.Now()) + "\r\n"
+		ics += "DTSTART;VALUE=DATE:" + formatICSDate(startDate) + "\r\n"
+		ics += "DTEND;VALUE=DATE:" + formatICSDate(endDate) + "\r\n"
+		ics += "SUMMARY:" + escapeICSText(pick.Title)
+		if pick.Year > 0 {
+			ics += " (" + string(rune(pick.Year/1000+'0')) + string(rune((pick.Year/100)%10+'0')) + string(rune((pick.Year/10)%10+'0')) + string(rune(pick.Year%10+'0')) + ")"
+		}
+		ics += "\r\n"
+		ics += "DESCRIPTION:" + description + "\r\n"
+		if pick.Link != "" {
+			ics += "LOCATION:" + escapeICSText(pick.Link) + "\r\n"
+			ics += "URL:" + escapeICSText(pick.Link) + "\r\n"
+		}
+		ics += "TRANSP:TRANSPARENT\r\n"
+		ics += "END:VEVENT\r\n"
+	}
+
+	ics += "END:VCALENDAR\r\n"
+
+	return ics
+}
+
+// formatICSDate formats a time as YYYYMMDD for ICS DATE format
+func formatICSDate(t time.Time) string {
+	return t.Format("20060102")
+}
+
+// formatICSDateTime formats a time as YYYYMMDDTHHMMSSZ for ICS DATETIME format
+func formatICSDateTime(t time.Time) string {
+	return t.UTC().Format("20060102T150405Z")
+}
+
+// escapeICSText escapes special characters in ICS text fields
+func escapeICSText(s string) string {
+	// Replace special characters
+	s = replaceAll(s, "\\", "\\\\")
+	s = replaceAll(s, ",", "\\,")
+	s = replaceAll(s, ";", "\\;")
+	s = replaceAll(s, "\n", "\\n")
+	s = replaceAll(s, "\r", "")
+	return s
+}
+
+// replaceAll is a simple string replace helper
+func replaceAll(s, old, new string) string {
+	result := ""
+	for {
+		i := indexOf(s, old)
+		if i == -1 {
+			result += s
+			break
+		}
+		result += s[:i] + new
+		s = s[i+len(old):]
+	}
+	return result
+}
+
+// indexOf finds the first occurrence of a substring
+func indexOf(s, substr string) int {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return i
+		}
+	}
+	return -1
 }

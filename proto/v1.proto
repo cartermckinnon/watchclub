@@ -6,6 +6,14 @@ package watchclub;
 
 import "google/protobuf/timestamp.proto";
 
+// ScheduleIntervalUnit defines the time unit for club scheduling
+enum ScheduleIntervalUnit {
+  SCHEDULE_INTERVAL_UNIT_UNSPECIFIED = 0;
+  SCHEDULE_INTERVAL_UNIT_DAYS = 1;
+  SCHEDULE_INTERVAL_UNIT_WEEKS = 2;
+  SCHEDULE_INTERVAL_UNIT_MONTHS = 3;
+}
+
 // Club represents a watch club where members coordinate watching things together
 message Club {
   string id = 1;
@@ -14,6 +22,9 @@ message Club {
   google.protobuf.Timestamp start_date = 4;
   bool started = 5; // Whether the club has been shuffled and started
   google.protobuf.Timestamp created_at = 6;
+  int32 max_picks_per_member = 7; // Maximum picks each member can add (0 means unlimited)
+  int32 schedule_interval_quantity = 8; // e.g., 1, 2, 3
+  ScheduleIntervalUnit schedule_interval_unit = 9; // e.g., DAYS, WEEKS, MONTHS
 }
 
 // User represents a member of the watchclub
@@ -33,14 +44,15 @@ message Pick {
   int32 year = 5;
   string notes = 6; // Optional notes about why they picked this
   google.protobuf.Timestamp created_at = 7;
+  string link = 8; // Optional link to watch (streaming service, store, etc.)
 }
 
-// WeeklyAssignment represents which pick should be watched in a given week
-message WeeklyAssignment {
+// ScheduledPick represents which pick should be watched in a given period
+message ScheduledPick {
   string id = 1;
   string club_id = 2;
-  int32 week_number = 3; // Week 1, 2, 3, etc. from the start of the club
-  google.protobuf.Timestamp week_start_date = 4;
+  int32 sequence_number = 3; // 1, 2, 3, etc. - position in schedule
+  google.protobuf.Timestamp start_date = 4; // When this pick's period starts
   Pick pick = 5;
 }
 
@@ -59,6 +71,9 @@ message CreateUserResponse {
 message CreateClubRequest {
   string name = 1;
   google.protobuf.Timestamp start_date = 2;
+  int32 max_picks_per_member = 3; // Maximum picks per member (defaults to 1 if not specified)
+  int32 schedule_interval_quantity = 4; // Defaults to 1 if not specified
+  ScheduleIntervalUnit schedule_interval_unit = 5; // Defaults to WEEKS if not specified
 }
 
 // CreateClubResponse is the response after creating a club
@@ -84,11 +99,23 @@ message AddPickRequest {
   string title = 3;
   int32 year = 4;
   string notes = 5;
+  string link = 6;
 }
 
 // AddPickResponse is the response after adding a pick
 message AddPickResponse {
   Pick pick = 1;
+}
+
+// DeletePickRequest is the request to delete a pick
+message DeletePickRequest {
+  string pick_id = 1;
+  string user_id = 2; // For authorization - only pick owner can delete
+}
+
+// DeletePickResponse is the response after deleting a pick
+message DeletePickResponse {
+  bool success = 1;
 }
 
 // GetClubRequest is the request to get club details
@@ -111,17 +138,17 @@ message StartClubRequest {
 // StartClubResponse is the response after starting the club
 message StartClubResponse {
   Club club = 1;
-  repeated WeeklyAssignment assignments = 2;
+  repeated ScheduledPick assignments = 2;
 }
 
-// GetWeeklyAssignmentsRequest is the request to get the weekly viewing schedule
-message GetWeeklyAssignmentsRequest {
+// GetScheduledPicksRequest is the request to get the schedule
+message GetScheduledPicksRequest {
   string club_id = 1;
 }
 
-// GetWeeklyAssignmentsResponse is the response with the weekly viewing schedule
-message GetWeeklyAssignmentsResponse {
-  repeated WeeklyAssignment assignments = 1;
+// GetScheduledPicksResponse is the response with the schedule
+message GetScheduledPicksResponse {
+  repeated ScheduledPick assignments = 1;
 }
 
 // SendLoginEmailRequest is the request to send an account login email
@@ -145,6 +172,16 @@ message GetUserResponse {
   User user = 1;
 }
 
+// GetClubCalendarRequest is the request to get a club's calendar
+message GetClubCalendarRequest {
+  string club_id = 1;
+}
+
+// GetClubCalendarResponse is the response with the ICS calendar data
+message GetClubCalendarResponse {
+  string ics_data = 1;
+}
+
 // WatchClubService is the main service for the watchclub application
 service WatchClubService {
   // CreateUser creates a new user
@@ -162,15 +199,21 @@ service WatchClubService {
   // AddPick adds a pick to a club
   rpc AddPick(AddPickRequest) returns (AddPickResponse);
 
+  // DeletePick removes a pick from a club (only allowed before club starts)
+  rpc DeletePick(DeletePickRequest) returns (DeletePickResponse);
+
   // GetClub gets details about a club including members and their picks
   rpc GetClub(GetClubRequest) returns (GetClubResponse);
 
   // StartClub shuffles all picks and generates the weekly viewing schedule
   rpc StartClub(StartClubRequest) returns (StartClubResponse);
 
-  // GetWeeklyAssignments gets the weekly viewing schedule for a club
-  rpc GetWeeklyAssignments(GetWeeklyAssignmentsRequest) returns (GetWeeklyAssignmentsResponse);
+  // GetScheduledPicks gets the schedule for a club
+  rpc GetScheduledPicks(GetScheduledPicksRequest) returns (GetScheduledPicksResponse);
 
   // SendLoginEmail sends an account login email
   rpc SendLoginEmail(SendLoginEmailRequest) returns (SendLoginEmailResponse);
+
+  // GetClubCalendar generates an ICS calendar file for a club's schedule
+  rpc GetClubCalendar(GetClubCalendarRequest) returns (GetClubCalendarResponse);
 }

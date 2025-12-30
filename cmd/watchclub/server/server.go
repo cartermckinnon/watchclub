@@ -23,15 +23,29 @@ func NewServerCommand() cli.Command {
 	sc := serverCommand{
 		c:       flaggy.NewSubcommand("server"),
 		address: ":8080",
+		storage: "memory",
+		baseURL: "http://localhost:3000/",
 	}
 	sc.c.String(&sc.address, "a", "address", "Address to bind the server to")
+	sc.c.String(&sc.storage, "s", "storage", "Storage URI (memory, sqlite://path/to/db)")
+	sc.c.String(&sc.baseURL, "u", "base-url", "Base URL for generating login links")
+	sc.c.String(&sc.resendAPIKey, "", "resend-api-key", "Resend API key for sending emails (optional)")
+	sc.c.String(&sc.resendFrom, "", "resend-from", "Email address to send from (required if using Resend)")
+	sc.c.String(&sc.resendFromName, "", "resend-from-name", "Display name for from address (optional)")
+	sc.c.Bool(&sc.devMode, "d", "dev", "Development mode (logs emails to console instead of sending)")
 	return &sc
 }
 
 type serverCommand struct {
 	c *flaggy.Subcommand
 
-	address string
+	address        string
+	storage        string
+	baseURL        string
+	resendAPIKey   string
+	resendFrom     string
+	resendFromName string
+	devMode        bool
 }
 
 func (sc *serverCommand) Flaggy() *flaggy.Subcommand {
@@ -39,20 +53,28 @@ func (sc *serverCommand) Flaggy() *flaggy.Subcommand {
 }
 
 func (sc *serverCommand) Run(logger *zap.Logger, opts *cli.GlobalOptions) error {
-	logger.Info("starting server", zap.String("address", sc.address))
+	logger.Info("starting server",
+		zap.String("address", sc.address),
+		zap.String("storage", sc.storage))
 
 	// Create storage layer
-	store := storage.NewMemoryStorage()
+	store, err := storage.NewStorage(sc.storage)
+	if err != nil {
+		return fmt.Errorf("failed to create storage: %w", err)
+	}
 
 	// Create email sender
 	emailSender := mail.New(mail.Config{
-		DevelopmentMode: true,
-		BaseURL:         "http://localhost:3000/",
+		DevelopmentMode: sc.devMode,
+		BaseURL:         sc.baseURL,
+		ResendAPIKey:    sc.resendAPIKey,
+		ResendFrom:      sc.resendFrom,
+		ResendFromName:  sc.resendFromName,
 		Logger:          logger,
 	})
 
 	// Create service
-	svc := service.New(store, emailSender, "http://localhost:3000/")
+	svc := service.New(store, emailSender, sc.baseURL)
 
 	// Create gRPC server
 	grpcServer := grpc.NewServer()

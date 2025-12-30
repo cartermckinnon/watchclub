@@ -5,10 +5,12 @@ const {
     CreateClubRequest,
     JoinClubRequest,
     AddPickRequest,
+    DeletePickRequest,
     GetClubRequest,
     StartClubRequest,
-    GetWeeklyAssignmentsRequest,
-    SendLoginEmailRequest
+    GetScheduledPicksRequest,
+    SendLoginEmailRequest,
+    GetClubCalendarRequest
 } = require('./api/v1_pb.js');
 
 const {Timestamp} = require('google-protobuf/google/protobuf/timestamp_pb.js');
@@ -58,7 +60,10 @@ const state = {
             id: club.getId(),
             name: club.getName(),
             startDate: club.getStartDate() ? club.getStartDate().getSeconds() : null,
-            started: club.getStarted()
+            started: club.getStarted(),
+            maxPicksPerMember: club.getMaxPicksPerMember() || 1,
+            scheduleIntervalQuantity: club.getScheduleIntervalQuantity() || 1,
+            scheduleIntervalUnit: club.getScheduleIntervalUnit() || 2
         };
 
         // Remove if exists and add to front
@@ -170,29 +175,6 @@ function renderHomePage() {
                     <div id="userError" class="error-message"></div>
                 </div>
             ` : `
-                <div class="actions-grid">
-                    <div class="card action-card">
-                        <h2>Create a Club</h2>
-                        <p>Start a new watch club and invite your friends</p>
-                        <div class="form-group">
-                            <input type="text" id="clubName" placeholder="Club name (e.g., 2026 Movie Club)">
-                            <input type="date" id="clubStartDate">
-                            <button onclick="createClub()">Create Club</button>
-                        </div>
-                        <div id="createClubError" class="error-message"></div>
-                    </div>
-
-                    <div class="card action-card">
-                        <h2>Join a Club</h2>
-                        <p>Enter a club code to join</p>
-                        <div class="form-group">
-                            <input type="text" id="joinClubCode" placeholder="Club code">
-                            <button onclick="joinClubByCode()">Join Club</button>
-                        </div>
-                        <div id="joinClubError" class="error-message"></div>
-                    </div>
-                </div>
-
                 ${state.clubs.length > 0 ? `
                     <div class="card">
                         <h2>Your Clubs</h2>
@@ -209,6 +191,42 @@ function renderHomePage() {
                         <a href="#/my-clubs" class="btn-link">View all clubs →</a>
                     </div>
                 ` : ''}
+
+                <div class="actions-grid">
+                    <div class="card action-card">
+                        <h2>Create a Club</h2>
+                        <p>Start a new watch club and invite your friends</p>
+                        <div class="form-group">
+                            <label>Club name</label>
+                            <input type="text" id="clubName" placeholder="e.g., 2026 Movie Club">
+                            <label>Start date</label>
+                            <input type="date" id="clubStartDate">
+                            <label>Max picks per member</label>
+                            <input type="number" id="clubMaxPicks" min="1" value="1">
+                            <label>Schedule interval</label>
+                            <div class="interval-inputs" style="display: flex; gap: 0.5rem;">
+                                <input type="number" id="scheduleQuantity" min="1" value="1" placeholder="1" style="flex: 1;">
+                                <select id="scheduleUnit" style="flex: 1;">
+                                    <option value="1">Days</option>
+                                    <option value="2" selected>Weeks</option>
+                                    <option value="3">Months</option>
+                                </select>
+                            </div>
+                            <button onclick="createClub()">Create Club</button>
+                        </div>
+                        <div id="createClubError" class="error-message"></div>
+                    </div>
+
+                    <div class="card action-card">
+                        <h2>Join a Club</h2>
+                        <p>Enter a club code to join</p>
+                        <div class="form-group">
+                            <input type="text" id="joinClubCode" placeholder="Club code">
+                            <button onclick="joinClubByCode()">Join Club</button>
+                        </div>
+                        <div id="joinClubError" class="error-message"></div>
+                    </div>
+                </div>
             `}
         </div>
     `;
@@ -350,7 +368,9 @@ function renderClubDetailPage(params) {
 
         state.addClub(club);
 
-        const userPick = picks.find(p => p.getUserId() === state.currentUser.id);
+        const userPicks = picks.filter(p => p.getUserId() === state.currentUser.id);
+        const maxPicks = club.getMaxPicksPerMember();
+        const canAddMore = maxPicks === 0 || userPicks.length < maxPicks;
         const shareUrl = `${window.location.origin}${window.location.pathname}#/club/${clubId}/join`;
 
         clubContent.innerHTML = `
@@ -358,72 +378,115 @@ function renderClubDetailPage(params) {
                 <h1>${escapeHtml(club.getName())}</h1>
                 <div class="club-meta">
                     <span>Start Date: ${formatDate(club.getStartDate())}</span>
+                    <span>Schedule: Every ${club.getScheduleIntervalQuantity()} ${getUnitName(club.getScheduleIntervalUnit(), club.getScheduleIntervalQuantity())}</span>
                     <span class="club-status ${club.getStarted() ? 'started' : 'pending'}">
                         ${club.getStarted() ? '✓ Started' : 'Pending'}
                     </span>
                 </div>
             </div>
 
-            <div class="card">
-                <h3>Invite Friends</h3>
-                <p>Share this link with your friends:</p>
-                <div class="share-link">
-                    <input type="text" value="${shareUrl}" readonly onclick="this.select()">
-                    <button onclick="copyShareLink('${shareUrl}')">Copy</button>
-                </div>
-                <div id="copySuccess" class="success-message" style="display: none;">Link copied!</div>
-            </div>
-
-            <div class="card">
-                <h3>Members (${members.length})</h3>
-                <div class="member-list">
-                    ${members.map(m => `
-                        <div class="member-item">
-                            <span>${escapeHtml(m.getName())}</span>
-                            ${picks.some(p => p.getUserId() === m.getId()) ? '<span class="badge">✓ Picked</span>' : '<span class="badge pending">Pending</span>'}
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Picks (${picks.length})</h3>
-                ${!userPick ? `
-                    <p>You haven't added your picks yet.</p>
-                    <a href="#/club/${clubId}/add-pick" class="btn">Add A Pick</a>
-                ` : `
-                    <p class="success-message">✓ You've added your pick: <strong>${escapeHtml(userPick.getTitle())}</strong></p>
-                `}
-
-                ${picks.length > 0 ? `
-                    <div class="pick-list">
-                        ${picks.map(p => `
-                            <div class="pick-item">
-                                <strong>${escapeHtml(p.getTitle())}</strong> ${p.getYear() ? `(${p.getYear()})` : ''}
-                                ${p.getNotes() ? `<p class="pick-notes">${escapeHtml(p.getNotes())}</p>` : ''}
-                            </div>
-                        `).join('')}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div class="card">
+                    <h3>Invite Friends</h3>
+                    <p>Share this link with your friends:</p>
+                    <div class="share-link">
+                        <input type="text" value="${shareUrl}" readonly onclick="this.select()">
+                        <button onclick="copyShareLink('${shareUrl}')">Copy</button>
                     </div>
-                ` : ''}
+                    <div id="copySuccess" class="success-message" style="display: none;">Link copied!</div>
+                </div>
+
+                <div class="card">
+                    <h3>Members (${members.length})</h3>
+                    <div class="member-list">
+                        ${members.map(m => {
+                            const memberPickCount = picks.filter(p => p.getUserId() === m.getId()).length;
+                            const maxPicksDisplay = maxPicks === 0 ? '∞' : maxPicks;
+                            return `
+                                <div class="member-item">
+                                    <span>${escapeHtml(m.getName())}</span>
+                                    <span class="badge ${memberPickCount > 0 ? 'success' : 'pending'}">
+                                        ${memberPickCount}/${maxPicksDisplay} picks
+                                    </span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
             </div>
 
-            ${!club.getStarted() && picks.length >= members.length && picks.length > 0 ? `
+            ${!club.getStarted() ? `
+                <div class="card">
+                    <h3>Your Picks (${userPicks.length}/${maxPicks === 0 ? '∞' : maxPicks})</h3>
+
+                    ${userPicks.length > 0 ? `
+                        <div class="user-picks-list">
+                            ${userPicks.map(pick => `
+                                <div class="pick-item user-pick">
+                                    <div class="pick-content">
+                                        <strong>${escapeHtml(pick.getTitle())}</strong>
+                                        ${pick.getYear() ? `(${pick.getYear()})` : ''}
+                                        ${pick.getNotes() ? `<p class="pick-notes">${escapeHtml(pick.getNotes())}</p>` : ''}
+                                    </div>
+                                    <button class="btn-danger btn-small" onclick="deletePickAction('${clubId}', '${pick.getId()}')">
+                                        Delete
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p>You haven\'t added any picks yet.</p>'}
+
+                    ${canAddMore ? `
+                        <a href="#/club/${clubId}/add-pick" class="btn">
+                            ${userPicks.length === 0 ? 'Add A Pick' : 'Add Another Pick'}
+                        </a>
+                    ` : `
+                        <p class="info-message">You've reached the maximum number of picks (${maxPicks}).</p>
+                    `}
+
+                    ${picks.length > 0 ? `
+                        <h4 style="margin-top: 2rem;">All Picks (${picks.length})</h4>
+                        <div class="pick-list">
+                            ${picks.map(p => {
+                                const pickMember = members.find(m => m.getId() === p.getUserId());
+                                return `
+                                    <div class="pick-item">
+                                        <strong>${escapeHtml(p.getTitle())}</strong> ${p.getYear() ? `(${p.getYear()})` : ''}
+                                        <span class="pick-author">by ${escapeHtml(pickMember ? pickMember.getName() : 'Unknown')}</span>
+                                        ${p.getNotes() ? `<p class="pick-notes">${escapeHtml(p.getNotes())}</p>` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            ` : ''}
+
+            ${!club.getStarted() && picks.length > 0 ? `
                 <div class="card">
                     <h3>Ready to Start!</h3>
-                    <p>All members have added their picks. Click below to shuffle and generate the schedule.</p>
+                    <p>The club has ${picks.length} pick${picks.length !== 1 ? 's' : ''}. Click below to shuffle and generate the schedule.</p>
                     <button onclick="startClubAction('${clubId}')" class="btn primary">Start Club & Shuffle</button>
                     <div id="startError" class="error-message"></div>
                 </div>
+            ` : !club.getStarted() ? `
+                <div class="card">
+                    <h3>Waiting for Picks</h3>
+                    <p>The club needs at least one pick before it can be started.</p>
+                </div>
             ` : club.getStarted() ? `
                 <div class="card">
-                    <h3>Weekly Schedule</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="margin: 0;">Schedule</h3>
+                        <button onclick="downloadCalendar('${clubId}')" class="btn-secondary">Download Calendar</button>
+                    </div>
                     <div id="scheduleContent">Loading schedule...</div>
                 </div>
             ` : ''}
         `;
 
         if (club.getStarted()) {
-            loadSchedule(clubId);
+            loadSchedule(clubId, club, members);
         }
     });
 }
@@ -449,6 +512,9 @@ function renderAddPickPage(params) {
                     <label>Year</label>
                     <input type="number" id="year" placeholder="e.g., 1994">
 
+                    <label>Link to watch</label>
+                    <input type="url" id="link" placeholder="e.g., https://netflix.com/...">
+
                     <label>Why did you pick this?</label>
                     <textarea id="notes" rows="3" placeholder="Optional notes..."></textarea>
                 </div>
@@ -462,6 +528,78 @@ function renderAddPickPage(params) {
             </div>
         </div>
     `;
+}
+
+// Pick Detail Page
+function renderPickDetailPage(params) {
+    const content = document.getElementById('app-content');
+    const { clubId, pickId } = params;
+
+    if (!state.currentUser) {
+        router.navigate('/');
+        return;
+    }
+
+    content.innerHTML = `
+        <div class="pick-detail-page">
+            <div class="card">
+                <div id="pickDetailContent">Loading...</div>
+            </div>
+        </div>
+    `;
+
+    const request = new GetClubRequest();
+    request.setClubId(clubId);
+
+    client.getClub(request, {}, (err, response) => {
+        const pickDetailContent = document.getElementById('pickDetailContent');
+        if (err) {
+            pickDetailContent.innerHTML = `
+                <p class="error-message">Error loading pick details: ${err.message}</p>
+                <a href="#/club/${clubId}" class="btn">Back to Club</a>
+            `;
+            return;
+        }
+
+        const club = response.getClub();
+        const members = response.getMembersList();
+        const picks = response.getPicksList();
+        const pick = picks.find(p => p.getId() === pickId);
+
+        if (!pick) {
+            pickDetailContent.innerHTML = `
+                <p class="error-message">Pick not found</p>
+                <a href="#/club/${clubId}" class="btn">Back to Club</a>
+            `;
+            return;
+        }
+
+        const member = members.find(m => m.getId() === pick.getUserId());
+
+        pickDetailContent.innerHTML = `
+            <h1>${escapeHtml(pick.getTitle())}${pick.getYear() ? ` (${pick.getYear()})` : ''}</h1>
+            <p class="pick-meta">Picked by ${escapeHtml(member ? member.getName() : 'Unknown')}</p>
+
+            ${pick.getLink() ? `
+                <div class="pick-link-section" style="margin-top: 1.5rem;">
+                    <a href="${escapeHtml(pick.getLink())}" target="_blank" rel="noopener noreferrer" class="btn primary">
+                        Watch Now →
+                    </a>
+                </div>
+            ` : ''}
+
+            ${pick.getNotes() ? `
+                <div class="pick-notes-section" style="margin-top: 1.5rem;">
+                    <h3>Notes</h3>
+                    <p class="pick-notes-detail">${escapeHtml(pick.getNotes())}</p>
+                </div>
+            ` : !pick.getLink() ? '<p class="info-message" style="margin-top: 1.5rem;">No additional details added for this pick.</p>' : ''}
+
+            <div class="button-group" style="margin-top: 2rem;">
+                <a href="#/club/${clubId}" class="btn">Back to Club</a>
+            </div>
+        `;
+    });
 }
 
 // ===== ACTIONS =====
@@ -502,6 +640,9 @@ function createUserAccount() {
 function createClub() {
     const name = document.getElementById('clubName').value.trim();
     const startDateStr = document.getElementById('clubStartDate').value;
+    const maxPicks = parseInt(document.getElementById('clubMaxPicks').value) || 1;
+    const scheduleQty = parseInt(document.getElementById('scheduleQuantity').value) || 1;
+    const scheduleUnit = parseInt(document.getElementById('scheduleUnit').value) || 2;
     const errorEl = document.getElementById('createClubError');
 
     if (!name || !startDateStr) {
@@ -510,10 +651,27 @@ function createClub() {
         return;
     }
 
+    if (maxPicks < 1) {
+        errorEl.textContent = 'Max picks must be at least 1';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    if (scheduleQty < 1) {
+        errorEl.textContent = 'Schedule interval must be at least 1';
+        errorEl.style.display = 'block';
+        return;
+    }
+
     const request = new CreateClubRequest();
     request.setName(name);
+    request.setMaxPicksPerMember(maxPicks);
+    request.setScheduleIntervalQuantity(scheduleQty);
+    request.setScheduleIntervalUnit(scheduleUnit);
 
-    const startDate = new Date(startDateStr);
+    // Parse date as local time, not UTC
+    const [year, month, day] = startDateStr.split('-').map(Number);
+    const startDate = new Date(year, month - 1, day); // month is 0-indexed
     const timestamp = new Timestamp();
     timestamp.setSeconds(Math.floor(startDate.getTime() / 1000));
     request.setStartDate(timestamp);
@@ -611,6 +769,7 @@ function performJoin(clubId, errorEl) {
 function addPickAction(clubId) {
     const title = document.getElementById('title').value.trim();
     const year = parseInt(document.getElementById('year').value);
+    const link = document.getElementById('link').value.trim();
     const notes = document.getElementById('notes').value.trim();
     const errorEl = document.getElementById('addPickError');
 
@@ -625,6 +784,7 @@ function addPickAction(clubId) {
     request.setUserId(state.currentUser.id);
     request.setTitle(title);
     if (year) request.setYear(year);
+    if (link) request.setLink(link);
     if (notes) request.setNotes(notes);
 
     client.addPick(request, {}, (err) => {
@@ -651,15 +811,59 @@ function startClubAction(clubId) {
         }
 
         state.addClub(response.getClub());
-        router.navigate(`/club/${clubId}`);
+        // Re-render the current page to show updated state
+        renderClubDetailPage({clubId});
     });
 }
 
-function loadSchedule(clubId) {
-    const request = new GetWeeklyAssignmentsRequest();
+function deletePickAction(clubId, pickId) {
+    if (!confirm('Are you sure you want to delete this pick?')) {
+        return;
+    }
+
+    const request = new DeletePickRequest();
+    request.setPickId(pickId);
+    request.setUserId(state.currentUser.id);
+
+    client.deletePick(request, {}, (err) => {
+        if (err) {
+            alert(`Error deleting pick: ${err.message}`);
+            return;
+        }
+
+        // Refresh the club detail page
+        renderClubDetailPage({clubId});
+    });
+}
+
+function downloadCalendar(clubId) {
+    const request = new GetClubCalendarRequest();
     request.setClubId(clubId);
 
-    client.getWeeklyAssignments(request, {}, (err, response) => {
+    client.getClubCalendar(request, {}, (err, response) => {
+        if (err) {
+            alert(`Error generating calendar: ${err.message}`);
+            return;
+        }
+
+        const icsData = response.getIcsData();
+        const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'watchclub-schedule.ics';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    });
+}
+
+function loadSchedule(clubId, club, members) {
+    const request = new GetScheduledPicksRequest();
+    request.setClubId(clubId);
+
+    client.getScheduledPicks(request, {}, (err, response) => {
         const scheduleContent = document.getElementById('scheduleContent');
         if (err) {
             scheduleContent.innerHTML = `<p class="error-message">Error loading schedule: ${err.message}</p>`;
@@ -667,23 +871,56 @@ function loadSchedule(clubId) {
         }
 
         const assignments = response.getAssignmentsList();
+        const periodLabel = getPeriodLabel(club.getScheduleIntervalUnit());
+
         scheduleContent.innerHTML = `
             <div class="schedule-list">
                 ${assignments.map(a => {
                     const pick = a.getPick();
+                    const member = members.find(m => m.getId() === pick.getUserId());
                     return `
-                        <div class="schedule-item">
-                            <div class="week-number">Week ${a.getWeekNumber()}</div>
+                        <a href="#/club/${clubId}/pick/${pick.getId()}" class="schedule-item">
+                            <div class="week-number">${periodLabel} ${a.getSequenceNumber()}</div>
                             <div class="schedule-details">
                                 <strong>${escapeHtml(pick.getTitle())}</strong> ${pick.getYear() ? `(${pick.getYear()})` : ''}
-                                <div class="schedule-date">${formatDate(a.getWeekStartDate())}</div>
+                                <span class="pick-author">by ${escapeHtml(member ? member.getName() : 'Unknown')}</span>
+                                <div class="schedule-date">${formatDate(a.getStartDate())}</div>
                             </div>
-                        </div>
+                        </a>
                     `;
                 }).join('')}
             </div>
         `;
     });
+}
+
+// Helper function to get period label based on interval unit
+function getPeriodLabel(unit) {
+    switch(unit) {
+        case 1: // DAYS
+            return 'Day';
+        case 2: // WEEKS
+            return 'Week';
+        case 3: // MONTHS
+            return 'Month';
+        default:
+            return 'Period';
+    }
+}
+
+// Helper function to get unit name with proper pluralization
+function getUnitName(unit, quantity) {
+    const plural = quantity !== 1;
+    switch(unit) {
+        case 1: // DAYS
+            return plural ? 'days' : 'day';
+        case 2: // WEEKS
+            return plural ? 'weeks' : 'week';
+        case 3: // MONTHS
+            return plural ? 'months' : 'month';
+        default:
+            return 'periods';
+    }
 }
 
 function copyShareLink(url) {
@@ -697,6 +934,7 @@ function copyShareLink(url) {
 function logout() {
     state.clearUser();
     router.navigate('/');
+    renderHomePage(); // Force re-render after logout
 }
 
 // Make functions globally available
@@ -706,6 +944,8 @@ window.joinClubByCode = joinClubByCode;
 window.joinClubAction = joinClubAction;
 window.addPickAction = addPickAction;
 window.startClubAction = startClubAction;
+window.deletePickAction = deletePickAction;
+window.downloadCalendar = downloadCalendar;
 window.copyShareLink = copyShareLink;
 window.logout = logout;
 
@@ -735,7 +975,7 @@ function renderLoginPage() {
 }
 
 // Auto-Login Page
-function renderLoginPage(params) {
+function renderAutoLoginPage(params) {
     const userId = params.userId;
     const content = document.getElementById('app-content');
 
@@ -803,11 +1043,12 @@ window.sendLoginEmail = sendLoginEmail;
 // Register routes
 router.register('/', renderHomePage);
 router.register('/login', renderLoginPage);
-router.register('/login/:userId', renderLoginPage);
+router.register('/login/:userId', renderAutoLoginPage);
 router.register('/club/:clubId/join', renderJoinPage);
 router.register('/my-clubs', renderMyClubsPage);
 router.register('/club/:clubId', renderClubDetailPage);
 router.register('/club/:clubId/add-pick', renderAddPickPage);
+router.register('/club/:clubId/pick/:pickId', renderPickDetailPage);
 
 // Start router
 router.init();

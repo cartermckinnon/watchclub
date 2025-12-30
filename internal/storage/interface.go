@@ -24,8 +24,8 @@ type Storage interface {
 	ListPicks(ctx context.Context, clubID string) ([]*v1.Pick, error)
 	DeletePick(ctx context.Context, id string) error
 
-	CreateWeeklyAssignment(ctx context.Context, assignment *v1.WeeklyAssignment) error
-	GetWeeklyAssignment(ctx context.Context, id string) (*v1.WeeklyAssignment, error)
-	ListWeeklyAssignments(ctx context.Context, clubID string) ([]*v1.WeeklyAssignment, error)
-	DeleteWeeklyAssignment(ctx context.Context, id string) error
+	CreateScheduledPick(ctx context.Context, assignment *v1.ScheduledPick) error
+	GetScheduledPick(ctx context.Context, id string) (*v1.ScheduledPick, error)
+	ListScheduledPicks(ctx context.Context, clubID string) ([]*v1.ScheduledPick, error)
+	DeleteScheduledPick(ctx context.Context, id string) error
 }

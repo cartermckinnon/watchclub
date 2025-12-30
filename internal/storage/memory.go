@@ -11,19 +11,19 @@ import (
 // NewMemoryStorage creates a new in-memory storage implementation
 func NewMemoryStorage() Storage {
 	return &memoryStorage{
-		users:             make(map[string]*v1.User),
-		clubs:             make(map[string]*v1.Club),
-		picks:             make(map[string]*v1.Pick),
-		weeklyAssignments: make(map[string]*v1.WeeklyAssignment),
+		users:          make(map[string]*v1.User),
+		clubs:          make(map[string]*v1.Club),
+		picks:          make(map[string]*v1.Pick),
+		scheduledPicks: make(map[string]*v1.ScheduledPick),
 	}
 }
 
 type memoryStorage struct {
-	mu                sync.RWMutex
-	users             map[string]*v1.User
-	clubs             map[string]*v1.Club
-	picks             map[string]*v1.Pick
-	weeklyAssignments map[string]*v1.WeeklyAssignment
+	mu             sync.RWMutex
+	users          map[string]*v1.User
+	clubs          map[string]*v1.Club
+	picks          map[string]*v1.Pick
+	scheduledPicks map[string]*v1.ScheduledPick
 }
 
 // User operations
@@ -178,36 +178,36 @@ func (m *memoryStorage) DeletePick(ctx context.Context, id string) error {
 	return nil
 }
 
-// WeeklyAssignment operations
+// ScheduledPick operations
 
-func (m *memoryStorage) CreateWeeklyAssignment(ctx context.Context, assignment *v1.WeeklyAssignment) error {
+func (m *memoryStorage) CreateScheduledPick(ctx context.Context, assignment *v1.ScheduledPick) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _, exists := m.weeklyAssignments[assignment.Id]; exists {
-		return fmt.Errorf("weekly assignment already exists: %s", assignment.Id)
+	if _, exists := m.scheduledPicks[assignment.Id]; exists {
+		return fmt.Errorf("scheduled pick already exists: %s", assignment.Id)
 	}
-	m.weeklyAssignments[assignment.Id] = assignment
+	m.scheduledPicks[assignment.Id] = assignment
 	return nil
 }
 
-func (m *memoryStorage) GetWeeklyAssignment(ctx context.Context, id string) (*v1.WeeklyAssignment, error) {
+func (m *memoryStorage) GetScheduledPick(ctx context.Context, id string) (*v1.ScheduledPick, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	assignment, ok := m.weeklyAssignments[id]
+	assignment, ok := m.scheduledPicks[id]
 	if !ok {
-		return nil, fmt.Errorf("weekly assignment not found: %s", id)
+		return nil, fmt.Errorf("scheduled pick not found: %s", id)
 	}
 	return assignment, nil
 }
 
-func (m *memoryStorage) ListWeeklyAssignments(ctx context.Context, clubID string) ([]*v1.WeeklyAssignment, error) {
+func (m *memoryStorage) ListScheduledPicks(ctx context.Context, clubID string) ([]*v1.ScheduledPick, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	assignments := make([]*v1.WeeklyAssignment, 0)
-	for _, assignment := range m.weeklyAssignments {
+	assignments := make([]*v1.ScheduledPick, 0)
+	for _, assignment := range m.scheduledPicks {
 		if assignment.ClubId == clubID {
 			assignments = append(assignments, assignment)
 		}
@@ -215,13 +215,13 @@ func (m *memoryStorage) ListWeeklyAssignments(ctx context.Context, clubID string
 	return assignments, nil
 }
 
-func (m *memoryStorage) DeleteWeeklyAssignment(ctx context.Context, id string) error {
+func (m *memoryStorage) DeleteScheduledPick(ctx context.Context, id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _, ok := m.weeklyAssignments[id]; !ok {
-		return fmt.Errorf("weekly assignment not found: %s", id)
+	if _, ok := m.scheduledPicks[id]; !ok {
+		return fmt.Errorf("scheduled pick not found: %s", id)
 	}
-	delete(m.weeklyAssignments, id)
+	delete(m.scheduledPicks, id)
 	return nil
 }

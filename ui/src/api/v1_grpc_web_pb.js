@@ -385,6 +385,67 @@ proto.watchclub.WatchClubServicePromiseClient.prototype.addPick =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
+ *   !proto.watchclub.DeletePickRequest,
+ *   !proto.watchclub.DeletePickResponse>}
+ */
+const methodDescriptor_WatchClubService_DeletePick = new grpc.web.MethodDescriptor(
+  '/watchclub.WatchClubService/DeletePick',
+  grpc.web.MethodType.UNARY,
+  proto.watchclub.DeletePickRequest,
+  proto.watchclub.DeletePickResponse,
+  /**
+   * @param {!proto.watchclub.DeletePickRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.watchclub.DeletePickResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.watchclub.DeletePickRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.watchclub.DeletePickResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.watchclub.DeletePickResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.watchclub.WatchClubServiceClient.prototype.deletePick =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/watchclub.WatchClubService/DeletePick',
+      request,
+      metadata || {},
+      methodDescriptor_WatchClubService_DeletePick,
+      callback);
+};
+
+
+/**
+ * @param {!proto.watchclub.DeletePickRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.watchclub.DeletePickResponse>}
+ *     Promise that resolves to the response
+ */
+proto.watchclub.WatchClubServicePromiseClient.prototype.deletePick =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/watchclub.WatchClubService/DeletePick',
+      request,
+      metadata || {},
+      methodDescriptor_WatchClubService_DeletePick);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
  *   !proto.watchclub.GetClubRequest,
  *   !proto.watchclub.GetClubResponse>}
  */
@@ -507,61 +568,61 @@ proto.watchclub.WatchClubServicePromiseClient.prototype.startClub =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
- *   !proto.watchclub.GetWeeklyAssignmentsRequest,
- *   !proto.watchclub.GetWeeklyAssignmentsResponse>}
+ *   !proto.watchclub.GetScheduledPicksRequest,
+ *   !proto.watchclub.GetScheduledPicksResponse>}
  */
-const methodDescriptor_WatchClubService_GetWeeklyAssignments = new grpc.web.MethodDescriptor(
-  '/watchclub.WatchClubService/GetWeeklyAssignments',
+const methodDescriptor_WatchClubService_GetScheduledPicks = new grpc.web.MethodDescriptor(
+  '/watchclub.WatchClubService/GetScheduledPicks',
   grpc.web.MethodType.UNARY,
-  proto.watchclub.GetWeeklyAssignmentsRequest,
-  proto.watchclub.GetWeeklyAssignmentsResponse,
+  proto.watchclub.GetScheduledPicksRequest,
+  proto.watchclub.GetScheduledPicksResponse,
   /**
-   * @param {!proto.watchclub.GetWeeklyAssignmentsRequest} request
+   * @param {!proto.watchclub.GetScheduledPicksRequest} request
    * @return {!Uint8Array}
    */
   function(request) {
     return request.serializeBinary();
   },
-  proto.watchclub.GetWeeklyAssignmentsResponse.deserializeBinary
+  proto.watchclub.GetScheduledPicksResponse.deserializeBinary
 );
 
 
 /**
- * @param {!proto.watchclub.GetWeeklyAssignmentsRequest} request The
+ * @param {!proto.watchclub.GetScheduledPicksRequest} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.RpcError, ?proto.watchclub.GetWeeklyAssignmentsResponse)}
+ * @param {function(?grpc.web.RpcError, ?proto.watchclub.GetScheduledPicksResponse)}
  *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.watchclub.GetWeeklyAssignmentsResponse>|undefined}
+ * @return {!grpc.web.ClientReadableStream<!proto.watchclub.GetScheduledPicksResponse>|undefined}
  *     The XHR Node Readable Stream
  */
-proto.watchclub.WatchClubServiceClient.prototype.getWeeklyAssignments =
+proto.watchclub.WatchClubServiceClient.prototype.getScheduledPicks =
     function(request, metadata, callback) {
   return this.client_.rpcCall(this.hostname_ +
-      '/watchclub.WatchClubService/GetWeeklyAssignments',
+      '/watchclub.WatchClubService/GetScheduledPicks',
       request,
       metadata || {},
-      methodDescriptor_WatchClubService_GetWeeklyAssignments,
+      methodDescriptor_WatchClubService_GetScheduledPicks,
       callback);
 };
 
 
 /**
- * @param {!proto.watchclub.GetWeeklyAssignmentsRequest} request The
+ * @param {!proto.watchclub.GetScheduledPicksRequest} request The
  *     request proto
  * @param {?Object<string, string>=} metadata User defined
  *     call metadata
- * @return {!Promise<!proto.watchclub.GetWeeklyAssignmentsResponse>}
+ * @return {!Promise<!proto.watchclub.GetScheduledPicksResponse>}
  *     Promise that resolves to the response
  */
-proto.watchclub.WatchClubServicePromiseClient.prototype.getWeeklyAssignments =
+proto.watchclub.WatchClubServicePromiseClient.prototype.getScheduledPicks =
     function(request, metadata) {
   return this.client_.unaryCall(this.hostname_ +
-      '/watchclub.WatchClubService/GetWeeklyAssignments',
+      '/watchclub.WatchClubService/GetScheduledPicks',
       request,
       metadata || {},
-      methodDescriptor_WatchClubService_GetWeeklyAssignments);
+      methodDescriptor_WatchClubService_GetScheduledPicks);
 };
 
 
@@ -623,6 +684,67 @@ proto.watchclub.WatchClubServicePromiseClient.prototype.sendLoginEmail =
       request,
       metadata || {},
       methodDescriptor_WatchClubService_SendLoginEmail);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.watchclub.GetClubCalendarRequest,
+ *   !proto.watchclub.GetClubCalendarResponse>}
+ */
+const methodDescriptor_WatchClubService_GetClubCalendar = new grpc.web.MethodDescriptor(
+  '/watchclub.WatchClubService/GetClubCalendar',
+  grpc.web.MethodType.UNARY,
+  proto.watchclub.GetClubCalendarRequest,
+  proto.watchclub.GetClubCalendarResponse,
+  /**
+   * @param {!proto.watchclub.GetClubCalendarRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.watchclub.GetClubCalendarResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.watchclub.GetClubCalendarRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.watchclub.GetClubCalendarResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.watchclub.GetClubCalendarResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.watchclub.WatchClubServiceClient.prototype.getClubCalendar =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/watchclub.WatchClubService/GetClubCalendar',
+      request,
+      metadata || {},
+      methodDescriptor_WatchClubService_GetClubCalendar,
+      callback);
+};
+
+
+/**
+ * @param {!proto.watchclub.GetClubCalendarRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.watchclub.GetClubCalendarResponse>}
+ *     Promise that resolves to the response
+ */
+proto.watchclub.WatchClubServicePromiseClient.prototype.getClubCalendar =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/watchclub.WatchClubService/GetClubCalendar',
+      request,
+      metadata || {},
+      methodDescriptor_WatchClubService_GetClubCalendar);
 };
 
 

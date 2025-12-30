@@ -11,15 +11,18 @@ commonLabels:
 
 patches:
 - target:
-    kind: Deployment
+    kind: StatefulSet
     name: backend
   patch: |-
     - op: replace
-      path: /spec/replicas
-      value: 1
-    - op: replace
       path: /spec/template/spec/containers/0/image
       value: ghcr.io/cartermckinnon/watchclub:dev
+    - op: replace
+      path: /spec/template/spec/containers/0/args
+      value:
+        - server
+        - --address=:8080
+        - --storage=memory
 
 - target:
     kind: Deployment

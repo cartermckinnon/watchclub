@@ -19,14 +19,15 @@ spec:
 
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: backend
   labels:
     app: watchclub
     component: backend
 spec:
-  replicas: 2
+  serviceName: backend
+  replicas: 1
   selector:
     matchLabels:
       app: watchclub
@@ -42,9 +43,14 @@ spec:
       containers:
       - name: server
         image: ghcr.io/cartermckinnon/watchclub:latest
+        imagePullPolicy: Always
         args:
         - server
         - --address=:8080
+        - --storage=sqlite:///data/watchclub.db
+        volumeMounts:
+        - name: data
+          mountPath: /data
         ports:
         - name: grpc
           containerPort: 8080
@@ -66,3 +72,15 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+      labels:
+        app: watchclub
+        component: backend
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi

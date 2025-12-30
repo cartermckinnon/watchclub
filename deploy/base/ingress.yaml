@@ -6,20 +6,18 @@ metadata:
   labels:
     app: watchclub
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Enable CORS for gRPC-Web
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "*"
 spec:
   ingressClassName: nginx
   rules:
   - host: watchclub.squad.gay
     http:
       paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: frontend
-            port:
-              name: http
+      # gRPC-Web backend - must come FIRST (more specific path)
       - path: /watchclub.WatchClubService
         pathType: Prefix
         backend:
@@ -27,3 +25,11 @@ spec:
             name: backend
             port:
               name: grpc
+      # Frontend - catch-all (less specific)
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              name: http

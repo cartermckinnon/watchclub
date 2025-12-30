@@ -156,10 +156,10 @@ function renderHomePage() {
     const content = document.getElementById('app-content');
     content.innerHTML = `
         <div class="home-page">
-            ${state.clubs.length === 0 ? `
+            ${!state.currentUser ? `
                 <header class="page-header">
-                    <h2>Lights, camera, action!</h2>
-                    <p>WatchClub helps you watch stuff together.</p>
+                    <h1>👋 Hello!</h1>
+                    <p>WatchClub helps you watch stuff together. Create a club, invite your friends, add picks, and start watching!</p>
                 </header>
             ` : ''}
 

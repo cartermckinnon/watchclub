@@ -21,7 +21,6 @@ proto-builder:
     RUN wget -O /usr/local/bin/protoc-gen-grpc-web https://github.com/grpc/grpc-web/releases/download/1.4.2/protoc-gen-grpc-web-1.4.2-linux-x86_64 && \
         chmod +x /usr/local/bin/protoc-gen-grpc-web
     ENV PATH=$PATH:/root/go/bin
-    SAVE IMAGE --push $IMAGE_REPO/watchclub/proto-builder:earthly-cache
 
 proto:
     FROM +proto-builder
@@ -71,7 +70,6 @@ ui-builder:
         mkdir -p build/css/ && \
         cp src/css/* build/css/
     SAVE ARTIFACT /workdir/build /ui
-    SAVE IMAGE --push $IMAGE_REPO/watchclub/ui-builder:earthly-cache
 
 ui:
     FROM nginx:stable

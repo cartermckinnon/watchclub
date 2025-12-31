@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -o errexit
+set -o pipefail
+set -o nounset
+
 if [ $# -ne 6 ]; then
   echo >&2 "usage: NAMESPACE RESOURCE_TYPE RESOURCE_NAME CONTAINER_NAME IMAGE_NAME IMAGE_TAG"
   exit 1
@@ -15,6 +19,10 @@ IMAGE_TAG=$6
 echo "Checking ${RESOURCE_TYPE}/${RESOURCE_NAME}..."
 
 CURRENT_IMAGE=$(kubectl get $RESOURCE_TYPE $RESOURCE_NAME -n $NAMESPACE -o jsonpath="{.spec.template.spec.containers[?(@.name=='$CONTAINER_NAME')].image}")
+if [ "$CURRENT_IMAGE" = "" ]; then
+  echo "Failed to determine current image for container: $CONTAINER_NAME"
+  exit 1
+fi
 echo "Current: $CURRENT_IMAGE"
 
 echo "Querying registry for ${IMAGE_NAME}:${IMAGE_TAG}..."

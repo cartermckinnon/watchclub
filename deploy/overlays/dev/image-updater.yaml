@@ -75,5 +75,5 @@ spec:
                 "ghcr.io/cartermckinnon/watchclub" "dev"
 
               # frontend
-              update-image.sh $NAMESPACE "deployment" "frontend" "frontend" \
+              update-image.sh $NAMESPACE "deployment" "frontend" "nginx" \
                 "ghcr.io/cartermckinnon/watchclub/ui" "dev"

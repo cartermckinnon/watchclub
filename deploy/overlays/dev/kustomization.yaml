@@ -6,6 +6,7 @@ namespace: watchclub-dev
 resources:
 - ../../base
 - image-updater.yaml
+- email-secret.yaml
 
 commonLabels:
   environment: dev
@@ -18,12 +19,34 @@ patches:
     - op: replace
       path: /spec/template/spec/containers/0/image
       value: ghcr.io/cartermckinnon/watchclub:dev
+    - op: add
+      path: /spec/template/spec/containers/0/env
+      value:
+        - name: RESEND_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: email-config
+              key: resend-api-key
+        - name: RESEND_FROM
+          valueFrom:
+            secretKeyRef:
+              name: email-config
+              key: resend-from
+        - name: RESEND_FROM_NAME
+          valueFrom:
+            secretKeyRef:
+              name: email-config
+              key: resend-from-name
     - op: replace
       path: /spec/template/spec/containers/0/args
       value:
         - server
         - --address=:8080
         - --storage=memory
+        - --base-url=https://watchclub-dev.squad.gay/
+        - --resend-api-key=$(RESEND_API_KEY)
+        - --resend-from=$(RESEND_FROM)
+        - --resend-from-name=$(RESEND_FROM_NAME)
 
 - target:
     kind: Deployment

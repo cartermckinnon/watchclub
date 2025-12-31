@@ -48,6 +48,7 @@ spec:
         - server
         - --address=:8080
         - --storage=sqlite:///data/watchclub.db
+        - --base-url=https://watchclub.squad.gay/
         volumeMounts:
         - name: data
           mountPath: /data

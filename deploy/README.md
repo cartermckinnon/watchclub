@@ -15,27 +15,28 @@ Since the container images are hosted in a private GitHub Container Registry, yo
 
 **2. Create the secret in Kubernetes:**
 
-For development:
+Create the secret in the appropriate namespace depending on the environment.
+
 ```bash
 kubectl create secret docker-registry ghcr-credentials \
   --docker-server=ghcr.io \
   --docker-username=<YOUR_GITHUB_USERNAME> \
   --docker-password=<YOUR_PAT> \
-  --docker-email=<YOUR_EMAIL> \
-  -n watchclub-dev
+  --docker-email=<YOUR_EMAIL>
 ```
 
-For production:
+### Email configuration
+
+Create a config map in the appropriate namespace that contains the Resend config details:
 ```bash
-kubectl create secret docker-registry ghcr-credentials \
-  --docker-server=ghcr.io \
-  --docker-username=<YOUR_GITHUB_USERNAME> \
-  --docker-password=<YOUR_PAT> \
-  --docker-email=<YOUR_EMAIL> \
-  -n watchclub
+kubectl create secret generic email-config \
+    -n watchclub-dev \
+    --from-literal=resend-api-key="API_KEY" \
+    --from-literal=resend-from="noreply@watchclub-dev.squad.gay" \
+    --from-literal=resend-from-name="WatchClub (Dev)"
 ```
 
-## Deploy NGINX ingress controller
+### Deploy NGINX ingress controller
 
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -56,7 +57,7 @@ kubectl apply -k deploy/overlays/dev
 ```bash
 # Update image tags in production/kustomization.yaml first
 # Then:
-kubectl apply -k deploy/overlays/prod
+kubectl apply -k deploy/base
 ```
 
 ## Configuration

@@ -3,7 +3,7 @@ ARG --global IMAGE_REPO="ghcr.io/cartermckinnon"
 
 proto-builder:
     # toolchain last updated: April 16, 2022.
-    FROM ubuntu:22.04
+    FROM ubuntu:26.04
     # Get rid of the warning: "debconf: unable to initialize frontend: Dialog"
     # https://github.com/moby/moby/issues/27988
     RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
@@ -49,7 +49,7 @@ builder:
     SAVE ARTIFACT /go/bin/watchclub AS LOCAL bin/watchclub
 
 watchclub:
-    FROM ubuntu:22.04
+    FROM ubuntu:26.04
     RUN apt-get update && apt-get install -y ca-certificates
     LABEL org.opencontainers.image.source="https://github.com/cartermckinnon/watchclub/"
     COPY +builder/watchclub /usr/bin/watchclub
@@ -81,3 +81,15 @@ ui:
     CMD ["nginx","-g","daemon off;"]
     ARG VERSION="latest"
     SAVE IMAGE --push $IMAGE_REPO/watchclub/ui:$VERSION
+
+crane-builder:
+    FROM golang
+    RUN go install github.com/google/go-containerregistry/cmd/crane@latest
+    SAVE ARTIFACT /go/bin/crane /crane
+
+crane:
+    FROM ubuntu:26.04
+    LABEL org.opencontainers.image.source="https://github.com/cartermckinnon/watchclub"
+    COPY +crane-builder/crane /usr/bin/crane
+    ARG VERSION="latest"
+    SAVE IMAGE --push $IMAGE_REPO/watchclub/crane:$VERSION

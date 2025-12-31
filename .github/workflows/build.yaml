@@ -47,20 +47,27 @@ jobs:
         run: |
           earthly --ci --push +ui --VERSION=${{ steps.version.outputs.version }}
 
+      - name: Build and push crane image
+        run: |
+          earthly --ci --push +crane --VERSION=${{ steps.version.outputs.version }}
+
       - name: Tag and push as latest (tags only)
         if: steps.version.outputs.is_tag == 'true'
         run: |
           # Pull the versioned images
           docker pull ${{ env.IMAGE_REPO }}/watchclub:${{ steps.version.outputs.version }}
           docker pull ${{ env.IMAGE_REPO }}/watchclub/ui:${{ steps.version.outputs.version }}
+          docker pull ${{ env.IMAGE_REPO }}/watchclub/crane:${{ steps.version.outputs.version }}
 
           # Tag as latest
           docker tag ${{ env.IMAGE_REPO }}/watchclub:${{ steps.version.outputs.version }} ${{ env.IMAGE_REPO }}/watchclub:latest
           docker tag ${{ env.IMAGE_REPO }}/watchclub/ui:${{ steps.version.outputs.version }} ${{ env.IMAGE_REPO }}/watchclub/ui:latest
+          docker tag ${{ env.IMAGE_REPO }}/watchclub/crane:${{ steps.version.outputs.version }} ${{ env.IMAGE_REPO }}/watchclub/crane:latest
 
           # Push latest tags
           docker push ${{ env.IMAGE_REPO }}/watchclub:latest
           docker push ${{ env.IMAGE_REPO }}/watchclub/ui:latest
+          docker push ${{ env.IMAGE_REPO }}/watchclub/crane:latest
 
       - name: Summary
         run: |
@@ -76,4 +83,10 @@ jobs:
           echo "- \`${{ env.IMAGE_REPO }}/watchclub/ui:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           if [[ "${{ steps.version.outputs.is_tag }}" == "true" ]]; then
             echo "- \`${{ env.IMAGE_REPO }}/watchclub/ui:latest\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Crane:**" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.IMAGE_REPO }}/watchclub/crane:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ steps.version.outputs.is_tag }}" == "true" ]]; then
+            echo "- \`${{ env.IMAGE_REPO }}/watchclub/crane:latest\`" >> $GITHUB_STEP_SUMMARY
           fi

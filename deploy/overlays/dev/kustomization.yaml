@@ -5,6 +5,7 @@ namespace: watchclub-dev
 
 resources:
 - ../../base
+- image-updater.yaml
 
 commonLabels:
   environment: dev

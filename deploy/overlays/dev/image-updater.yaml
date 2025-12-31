@@ -61,7 +61,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: updater
-            image: ghcr.io/cartermckinnon/watchclub/crane:latest
+            image: ghcr.io/cartermckinnon/watchclub/image-updater:dev
             command:
             - bash
             - -c
@@ -69,63 +69,11 @@ spec:
               set -e
 
               NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
-              UPDATED=0
-
-              echo "🔍 Checking for image updates..."
-
-              update_image() {
-                local RESOURCE_TYPE=$1
-                local RESOURCE_NAME=$2
-                local CONTAINER_NAME=$3
-                local IMAGE_NAME=$4
-                local IMAGE_TAG=$5
-
-                echo "📦 Checking ${RESOURCE_TYPE}/${RESOURCE_NAME}..."
-
-                CURRENT_IMAGE=$(kubectl get $RESOURCE_TYPE $RESOURCE_NAME -n $NAMESPACE -o jsonpath="{.spec.template.spec.containers[?(@.name=='$CONTAINER_NAME')].image}")
-                echo "   Current: $CURRENT_IMAGE"
-
-                echo "   Querying registry for ${IMAGE_NAME}:${IMAGE_TAG}..."
-                NEW_DIGEST=$(crane digest "${IMAGE_NAME}:${IMAGE_TAG}" 2>&1)
-
-                if [ $? -ne 0 ] || [ -z "$NEW_DIGEST" ]; then
-                  echo "   ⚠️  WARNING: Could not query registry"
-                  echo "   Output: $NEW_DIGEST"
-                  return 1
-                fi
-
-                NEW_IMAGE="${IMAGE_NAME}@${NEW_DIGEST}"
-                echo "   Latest:  $NEW_IMAGE"
-
-                # Check if update is needed
-                if [ "$CURRENT_IMAGE" = "$NEW_IMAGE" ]; then
-                  echo "   ✓ Already up to date"
-                  return 0
-                fi
-
-                echo "   ⚡ New image detected, updating..."
-                kubectl set image $RESOURCE_TYPE/$RESOURCE_NAME -n $NAMESPACE \
-                  ${CONTAINER_NAME}="${NEW_IMAGE}"
-
-                if [ $? -eq 0 ]; then
-                  echo "   ✓ Updated successfully"
-                  UPDATED=1
-                else
-                  echo "   ❌ Update failed"
-                  return 1
-                fi
-              }
-
+              
               # backend
-              update_image "statefulset" "backend" "server" \
+              update-image.sh $NAMESPACE statefulset" "backend" "server" \
                 "ghcr.io/cartermckinnon/watchclub" "dev"
 
               # frontend
-              update_image "deployment" "frontend" "frontend" \
+              update-image.sh $NAMESPACE "deployment" "frontend" "frontend" \
                 "ghcr.io/cartermckinnon/watchclub/ui" "dev"
-
-              if [ $UPDATED -eq 1 ]; then
-                echo "Images updated"
-              else
-                echo "All images are up to date"
-              fi

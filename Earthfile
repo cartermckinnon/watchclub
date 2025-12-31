@@ -87,9 +87,10 @@ crane-builder:
     RUN go install github.com/google/go-containerregistry/cmd/crane@latest
     SAVE ARTIFACT /go/bin/crane /crane
 
-crane:
+image-updater:
     FROM ubuntu:26.04
     LABEL org.opencontainers.image.source="https://github.com/cartermckinnon/watchclub"
     COPY +crane-builder/crane /usr/bin/crane
+    COPY ops/update-image.sh /usr/bin/update-image.sh
     ARG VERSION="latest"
-    SAVE IMAGE --push $IMAGE_REPO/watchclub/crane:$VERSION
+    SAVE IMAGE --push $IMAGE_REPO/watchclub/image-updater:$VERSION

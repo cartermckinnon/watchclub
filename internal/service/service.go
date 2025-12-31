@@ -369,10 +369,48 @@ func (s *WatchClubService) StartClub(ctx context.Context, req *v1.StartClubReque
 		return nil, status.Errorf(codes.Internal, "failed to update club: %v", err)
 	}
 
+	// Send notification emails to all members with calendar attachment
+	go s.sendClubStartedEmails(ctx, club, assignments)
+
 	return &v1.StartClubResponse{
 		Club:        club,
 		Assignments: assignments,
 	}, nil
+}
+
+// sendClubStartedEmails sends notification emails to all club members
+func (s *WatchClubService) sendClubStartedEmails(ctx context.Context, club *v1.Club, assignments []*v1.ScheduledPick) {
+	// Get all users for the club
+	userMap := make(map[string]*v1.User)
+	for _, memberID := range club.MemberIds {
+		user, err := s.storage.GetUser(ctx, memberID)
+		if err != nil {
+			// Skip users that can't be found
+			continue
+		}
+		userMap[user.Id] = user
+	}
+
+	// Generate ICS calendar data
+	icsData := generateICSCalendar(club, assignments, userMap, s.baseURL)
+
+	// Send email to each member
+	for _, user := range userMap {
+		if user.Email == "" {
+			// Skip users without email addresses
+			continue
+		}
+
+		// Send the email (errors are logged by the mail sender)
+		_ = s.mailSender.SendClubStarted(
+			user.Email,
+			user.Name,
+			club.Name,
+			club.Id,
+			s.baseURL,
+			[]byte(icsData),
+		)
+	}
 }
 
 // calculateIntervalDuration converts schedule settings to a time.Duration

@@ -100,3 +100,44 @@ This link will automatically log you in.
 
 	return nil
 }
+
+func (d *devSender) SendClubStarted(to, userName, clubName, clubID, baseURL string, icsData []byte) error {
+	if baseURL == "" {
+		baseURL = d.baseURL
+	}
+
+	clubLink := fmt.Sprintf("%s#/club/%s", baseURL, clubID)
+
+	emailBody := fmt.Sprintf(`
+========================================
+WATCHCLUB - CLUB STARTED!
+========================================
+
+Hi %s,
+
+Great news! The club "%s" has started!
+
+View the schedule and picks:
+%s
+
+The full schedule is attached as a calendar file (ICS).
+You can import it into Google Calendar, Apple Calendar,
+Outlook, or any other calendar app.
+
+========================================
+
+Calendar ICS Data: %d bytes
+`, userName, clubName, clubLink, len(icsData))
+
+	d.logger.Info("📧 CLUB STARTED EMAIL (Development Mode)",
+		zap.String("to", to),
+		zap.String("userName", userName),
+		zap.String("clubName", clubName),
+		zap.String("clubLink", clubLink),
+		zap.Int("icsDataSize", len(icsData)),
+	)
+
+	fmt.Println(emailBody)
+
+	return nil
+}

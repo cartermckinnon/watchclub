@@ -154,3 +154,151 @@ If you didn't request this login link, you can safely ignore this email.
 
 	return nil
 }
+
+func (r *resendSender) SendClubStarted(to, userName, clubName, clubID, baseURL string, icsData []byte) error {
+	if baseURL == "" {
+		baseURL = r.baseURL
+	}
+
+	clubLink := fmt.Sprintf("%s#/club/%s", baseURL, clubID)
+
+	// Build from address with optional name
+	from := r.fromAddress
+	if r.fromName != "" {
+		from = fmt.Sprintf("%s <%s>", r.fromName, r.fromAddress)
+	}
+
+	// Create HTML email body
+	htmlBody := fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 32px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #3b82f6;
+            font-size: 24px;
+            margin-bottom: 24px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #3b82f6;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 24px 0;
+        }
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 16px;
+            margin: 24px 0;
+            border-radius: 4px;
+        }
+        .footer {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+            font-size: 14px;
+        }
+        .link {
+            color: #3b82f6;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 %s is Starting!</h1>
+        <p>Hi %s,</p>
+        <p>Great news! The club <strong>%s</strong> has started and the schedule is ready!</p>
+        <a href="%s" class="button">View Schedule</a>
+        <div class="info-box">
+            <strong>📅 Calendar Attached</strong><br>
+            The full schedule is attached as a calendar file (ICS). You can import it into:
+            <ul>
+                <li>Google Calendar</li>
+                <li>Apple Calendar</li>
+                <li>Outlook</li>
+                <li>Any other calendar app</li>
+            </ul>
+        </div>
+        <p>Each pick in the schedule includes details about who chose it and when to watch.</p>
+        <div class="footer">
+            <p>Happy watching! 🍿</p>
+        </div>
+    </div>
+</body>
+</html>
+`, clubName, userName, clubName, clubLink)
+
+	// Create plain text version
+	textBody := fmt.Sprintf(`
+%s is Starting!
+
+Hi %s,
+
+Great news! The club "%s" has started and the schedule is ready!
+
+View the schedule:
+%s
+
+📅 Calendar Attached
+The full schedule is attached as a calendar file (ICS). You can import it into Google Calendar, Apple Calendar, Outlook, or any other calendar app.
+
+Each pick in the schedule includes details about who chose it and when to watch.
+
+Happy watching! 🍿
+`, clubName, userName, clubName, clubLink)
+
+	// Send email with ICS attachment
+	params := &resend.SendEmailRequest{
+		From:    from,
+		To:      []string{to},
+		Subject: fmt.Sprintf("🎬 %s is Starting!", clubName),
+		Html:    htmlBody,
+		Text:    textBody,
+		Attachments: []*resend.Attachment{
+			{
+				Filename: fmt.Sprintf("%s.ics", clubName),
+				Content:  icsData,
+			},
+		},
+	}
+
+	sent, err := r.client.Emails.Send(params)
+	if err != nil {
+		r.logger.Error("Failed to send club started email via Resend",
+			zap.String("to", to),
+			zap.String("clubName", clubName),
+			zap.Error(err),
+		)
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	r.logger.Info("📧 Club started email sent via Resend",
+		zap.String("to", to),
+		zap.String("userName", userName),
+		zap.String("clubName", clubName),
+		zap.String("emailId", sent.Id),
+		zap.Int("icsDataSize", len(icsData)),
+	)
+
+	return nil
+}

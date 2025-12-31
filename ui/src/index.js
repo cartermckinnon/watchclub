@@ -873,7 +873,6 @@ function loadSchedule(clubId, club, members) {
         }
 
         const assignments = response.getAssignmentsList();
-        const periodLabel = getPeriodLabel(club.getScheduleIntervalUnit());
 
         scheduleContent.innerHTML = `
             <div class="schedule-list">
@@ -882,7 +881,7 @@ function loadSchedule(clubId, club, members) {
                     const member = members.find(m => m.getId() === pick.getUserId());
                     return `
                         <a href="#/club/${clubId}/pick/${pick.getId()}" class="schedule-item">
-                            <div class="week-number">${periodLabel} ${a.getSequenceNumber()}</div>
+                            <div class="week-number">#${a.getSequenceNumber()}</div>
                             <div class="schedule-details">
                                 <strong>${escapeHtml(pick.getTitle())}</strong> ${pick.getYear() ? `(${pick.getYear()})` : ''}
                                 <span class="pick-author">by ${escapeHtml(member ? member.getName() : 'Unknown')}</span>
@@ -894,20 +893,6 @@ function loadSchedule(clubId, club, members) {
             </div>
         `;
     });
-}
-
-// Helper function to get period label based on interval unit
-function getPeriodLabel(unit) {
-    switch(unit) {
-        case 1: // DAYS
-            return 'Day';
-        case 2: // WEEKS
-            return 'Week';
-        case 3: // MONTHS
-            return 'Month';
-        default:
-            return 'Period';
-    }
 }
 
 // Helper function to get unit name with proper pluralization

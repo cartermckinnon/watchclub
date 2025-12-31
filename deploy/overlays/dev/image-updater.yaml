@@ -61,10 +61,24 @@ spec:
           restartPolicy: OnFailure
           imagePullSecrets:
           - name: ghcr-credentials
+          volumes:
+          - name: docker-config
+            secret:
+              secretName: ghcr-credentials
+              items:
+              - key: .dockerconfigjson
+                path: config.json
           containers:
           - name: updater
             image: ghcr.io/cartermckinnon/watchclub/image-updater:dev
             imagePullPolicy: Always
+            env:
+            - name: DOCKER_CONFIG
+              value: /docker-config
+            volumeMounts:
+            - name: docker-config
+              mountPath: /docker-config
+              readOnly: true
             command:
             - bash
             - -c

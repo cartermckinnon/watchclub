@@ -6,7 +6,6 @@ namespace: watchclub-dev
 resources:
 - ../../base
 - image-updater.yaml
-- email-secret.yaml
 
 commonLabels:
   environment: dev
@@ -42,7 +41,7 @@ patches:
       value:
         - server
         - --address=:8080
-        - --storage=memory
+        - --storage=sqlite:///data/watchclub.db
         - --base-url=https://watchclub-dev.squad.gay/
         - --resend-api-key=$(RESEND_API_KEY)
         - --resend-from=$(RESEND_FROM)

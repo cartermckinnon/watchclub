@@ -59,21 +59,17 @@ spec:
         spec:
           serviceAccountName: image-updater
           restartPolicy: OnFailure
+          imagePullSecrets:
+          - name: ghcr-credentials
           containers:
           - name: updater
             image: ghcr.io/cartermckinnon/watchclub/image-updater:dev
+            imagePullPolicy: Always
             command:
             - bash
             - -c
             - |
-              set -e
-
+              set -o errexit
               NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
-              
-              # backend
-              update-image.sh $NAMESPACE statefulset" "backend" "server" \
-                "ghcr.io/cartermckinnon/watchclub" "dev"
-
-              # frontend
-              update-image.sh $NAMESPACE "deployment" "frontend" "nginx" \
-                "ghcr.io/cartermckinnon/watchclub/ui" "dev"
+              update-image.sh $NAMESPACE "statefulset" "backend" "server" "ghcr.io/cartermckinnon/watchclub" "dev"
+              update-image.sh $NAMESPACE "deployment" "frontend" "nginx" "ghcr.io/cartermckinnon/watchclub/ui" "dev"

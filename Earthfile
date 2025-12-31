@@ -90,5 +90,10 @@ image-updater:
     LABEL org.opencontainers.image.source="https://github.com/cartermckinnon/watchclub"
     COPY +crane-builder/crane /usr/bin/crane
     COPY ops/update-image.sh /usr/bin/update-image.sh
+    RUN apt-get update && \
+      apt-get install -y ca-certificates curl && \
+      curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+      chmod +x kubectl && \
+      mv kubectl /usr/bin/kubectl
     ARG VERSION="latest"
     SAVE IMAGE --push $IMAGE_REPO/watchclub/image-updater:$VERSION

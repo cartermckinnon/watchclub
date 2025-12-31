@@ -44,11 +44,30 @@ spec:
       - name: server
         image: ghcr.io/cartermckinnon/watchclub:latest
         imagePullPolicy: Always
+        env:
+        - name: RESEND_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: email-config
+              key: resend-api-key
+        - name: RESEND_FROM
+          valueFrom:
+            secretKeyRef:
+              name: email-config
+              key: resend-from
+        - name: RESEND_FROM_NAME
+          valueFrom:
+            secretKeyRef:
+              name: email-config
+              key: resend-from-name
         args:
         - server
         - --address=:8080
         - --storage=sqlite:///data/watchclub.db
         - --base-url=https://watchclub.squad.gay/
+        - --resend-api-key=$(RESEND_API_KEY)
+        - --resend-from=$(RESEND_FROM)
+        - --resend-from-name=$(RESEND_FROM_NAME)
         volumeMounts:
         - name: data
           mountPath: /data

@@ -5,7 +5,6 @@ namespace: watchclub-dev
 
 resources:
 - ../../base
-- image-updater.yaml
 
 commonLabels:
   environment: dev
@@ -18,34 +17,9 @@ patches:
     - op: replace
       path: /spec/template/spec/containers/0/image
       value: ghcr.io/cartermckinnon/watchclub:dev
-    - op: add
-      path: /spec/template/spec/containers/0/env
-      value:
-        - name: RESEND_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: email-config
-              key: resend-api-key
-        - name: RESEND_FROM
-          valueFrom:
-            secretKeyRef:
-              name: email-config
-              key: resend-from
-        - name: RESEND_FROM_NAME
-          valueFrom:
-            secretKeyRef:
-              name: email-config
-              key: resend-from-name
     - op: replace
-      path: /spec/template/spec/containers/0/args
-      value:
-        - server
-        - --address=:8080
-        - --storage=sqlite:///data/watchclub.db
-        - --base-url=https://watchclub-dev.squad.gay/
-        - --resend-api-key=$(RESEND_API_KEY)
-        - --resend-from=$(RESEND_FROM)
-        - --resend-from-name=$(RESEND_FROM_NAME)
+      path: /spec/template/spec/containers/0/args/3
+      value: --base-url=https://watchclub-dev.squad.gay/
 
 - target:
     kind: Deployment
@@ -65,3 +39,21 @@ patches:
     - op: replace
       path: /spec/rules/0/host
       value: watchclub-dev.squad.gay
+
+- target:
+    kind: CronJob
+    name: image-updater
+  patch: |-
+    - op: replace
+      path: /spec/jobTemplate/spec/template/spec/containers/0/image
+      value: ghcr.io/cartermckinnon/watchclub/image-updater:dev
+    - op: replace
+      path: /spec/jobTemplate/spec/template/spec/containers/0/command
+      value:
+        - bash
+        - -c
+        - |
+          set -o errexit
+          NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+          update-image.sh $NAMESPACE "statefulset" "backend" "server" "ghcr.io/cartermckinnon/watchclub" "dev"
+          update-image.sh $NAMESPACE "deployment" "frontend" "nginx" "ghcr.io/cartermckinnon/watchclub/ui" "dev"

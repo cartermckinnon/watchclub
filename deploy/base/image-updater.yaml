@@ -70,7 +70,7 @@ spec:
                 path: config.json
           containers:
           - name: updater
-            image: ghcr.io/cartermckinnon/watchclub/image-updater:dev
+            image: ghcr.io/cartermckinnon/watchclub/image-updater:latest
             imagePullPolicy: Always
             env:
             - name: DOCKER_CONFIG
@@ -85,5 +85,5 @@ spec:
             - |
               set -o errexit
               NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
-              update-image.sh $NAMESPACE "statefulset" "backend" "server" "ghcr.io/cartermckinnon/watchclub" "dev"
-              update-image.sh $NAMESPACE "deployment" "frontend" "nginx" "ghcr.io/cartermckinnon/watchclub/ui" "dev"
+              update-image.sh $NAMESPACE "statefulset" "backend" "server" "ghcr.io/cartermckinnon/watchclub" "latest"
+              update-image.sh $NAMESPACE "deployment" "frontend" "nginx" "ghcr.io/cartermckinnon/watchclub/ui" "latest"

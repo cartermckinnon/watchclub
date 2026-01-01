@@ -50,7 +50,7 @@ builder:
         -ldflags "-X github.com/cartermckinnon/watchclub/internal/version.GitCommit=${GIT_COMMIT} \
                   -X github.com/cartermckinnon/watchclub/internal/version.Version=${VERSION}" \
         -o /go/bin/ ./cmd/...
-    SAVE ARTIFACT /go/bin/watchclub AS LOCAL bin/watchclub
+    SAVE ARTIFACT /go/bin/watchclub /watchclub AS LOCAL bin/watchclub
 
 watchclub:
     FROM ubuntu:26.04
@@ -59,6 +59,7 @@ watchclub:
     ARG GIT_COMMIT="unknown"
     ARG VERSION="latest"
     COPY (+builder/watchclub --GIT_COMMIT=${GIT_COMMIT} --VERSION=${VERSION}) /usr/bin/watchclub
+    SAVE ARTIFACT /usr/bin/watchclub /watchclub AS LOCAL bin/watchclub
     ENTRYPOINT ["/usr/bin/watchclub"]
     CMD ["server"]
     SAVE IMAGE --push $IMAGE_REPO/watchclub:$VERSION

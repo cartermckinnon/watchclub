@@ -39,9 +39,12 @@ jobs:
             echo "version=dev" >> $GITHUB_OUTPUT
             echo "is_tag=false" >> $GITHUB_OUTPUT
           fi
+          echo "git_commit=${{ github.sha }}" >> $GITHUB_OUTPUT
       - name: Build and push backend image
         run: |
-          earthly --ci --push +watchclub --VERSION=${{ steps.version.outputs.version }}
+          earthly --ci --push +watchclub \
+            --VERSION=${{ steps.version.outputs.version }} \
+            --GIT_COMMIT=${{ steps.version.outputs.git_commit }}
 
       - name: Build and push frontend image
         run: |

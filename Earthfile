@@ -44,17 +44,23 @@ builder:
     WORKDIR /go/src/github.com/cartermckinnon/watchclub
     COPY . .
     COPY +proto/go internal/api
-    RUN go build -o /go/bin/ ./cmd/...
-    SAVE ARTIFACT /go/bin/watchclub /watchclub AS LOCAL bin/watchclub
+    ARG GIT_COMMIT="unknown"
+    ARG VERSION="dev"
+    RUN go build \
+        -ldflags "-X github.com/cartermckinnon/watchclub/internal/version.GitCommit=${GIT_COMMIT} \
+                  -X github.com/cartermckinnon/watchclub/internal/version.Version=${VERSION}" \
+        -o /go/bin/ ./cmd/...
+    SAVE ARTIFACT /go/bin/watchclub AS LOCAL bin/watchclub
 
 watchclub:
     FROM ubuntu:26.04
     RUN apt-get update && apt-get install -y ca-certificates
     LABEL org.opencontainers.image.source="https://github.com/cartermckinnon/watchclub/"
-    COPY +builder/watchclub /usr/bin/watchclub
+    ARG GIT_COMMIT="unknown"
+    ARG VERSION="latest"
+    COPY (+builder/watchclub --GIT_COMMIT=${GIT_COMMIT} --VERSION=${VERSION}) /usr/bin/watchclub
     ENTRYPOINT ["/usr/bin/watchclub"]
     CMD ["server"]
-    ARG VERSION="latest"
     SAVE IMAGE --push $IMAGE_REPO/watchclub:$VERSION
 
 ui-builder:

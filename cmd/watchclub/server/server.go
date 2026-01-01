@@ -17,6 +17,7 @@ import (
 	"github.com/cartermckinnon/watchclub/internal/mail"
 	"github.com/cartermckinnon/watchclub/internal/service"
 	"github.com/cartermckinnon/watchclub/internal/storage"
+	"github.com/cartermckinnon/watchclub/internal/version"
 )
 
 func NewServerCommand() cli.Command {
@@ -54,6 +55,8 @@ func (sc *serverCommand) Flaggy() *flaggy.Subcommand {
 
 func (sc *serverCommand) Run(logger *zap.Logger, opts *cli.GlobalOptions) error {
 	logger.Info("starting server",
+		zap.String("version", version.Version),
+		zap.String("gitCommit", version.GitCommit),
 		zap.String("address", sc.address),
 		zap.String("storage", sc.storage))
 

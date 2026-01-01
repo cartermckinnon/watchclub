@@ -373,7 +373,8 @@ func (s *WatchClubService) StartClub(ctx context.Context, req *v1.StartClubReque
 	}
 
 	// Send notification emails to all members with calendar attachment
-	go s.sendClubStartedEmails(ctx, club, assignments)
+	// Use background context since this runs in a goroutine after the RPC returns
+	go s.sendClubStartedEmails(context.Background(), club, assignments)
 
 	return &v1.StartClubResponse{
 		Club:        club,

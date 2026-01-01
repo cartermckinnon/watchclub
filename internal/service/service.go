@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -21,14 +22,16 @@ type WatchClubService struct {
 	storage    storage.Storage
 	mailSender mail.Sender
 	baseURL    string
+	logger     *zap.Logger
 }
 
 // New creates a new WatchClubService
-func New(store storage.Storage, mailSender mail.Sender, baseURL string) *WatchClubService {
+func New(store storage.Storage, mailSender mail.Sender, baseURL string, logger *zap.Logger) *WatchClubService {
 	return &WatchClubService{
 		storage:    store,
 		mailSender: mailSender,
 		baseURL:    baseURL,
+		logger:     logger,
 	}
 }
 
@@ -380,11 +383,19 @@ func (s *WatchClubService) StartClub(ctx context.Context, req *v1.StartClubReque
 
 // sendClubStartedEmails sends notification emails to all club members
 func (s *WatchClubService) sendClubStartedEmails(ctx context.Context, club *v1.Club, assignments []*v1.ScheduledPick) {
+	s.logger.Info("Sending club started emails",
+		zap.String("clubId", club.Id),
+		zap.String("clubName", club.Name),
+		zap.Int("memberCount", len(club.MemberIds)))
+
 	// Get all users for the club
 	userMap := make(map[string]*v1.User)
 	for _, memberID := range club.MemberIds {
 		user, err := s.storage.GetUser(ctx, memberID)
 		if err != nil {
+			s.logger.Warn("Failed to get user for email notification",
+				zap.String("userId", memberID),
+				zap.Error(err))
 			continue
 		}
 		userMap[user.Id] = user
@@ -392,15 +403,25 @@ func (s *WatchClubService) sendClubStartedEmails(ctx context.Context, club *v1.C
 
 	// Generate ICS calendar data
 	icsData := generateICSCalendar(club, assignments, userMap, s.baseURL)
+	s.logger.Debug("Generated ICS calendar data",
+		zap.String("clubId", club.Id),
+		zap.Int("icsSize", len(icsData)))
 
 	// Send email to each member
+	emailsSent := 0
 	for _, user := range userMap {
 		if user.Email == "" {
+			s.logger.Warn("User has no email address, skipping",
+				zap.String("userId", user.Id),
+				zap.String("userName", user.Name))
 			continue
 		}
 
-		// Errors are logged by the mail sender
-		_ = s.mailSender.SendClubStarted(
+		s.logger.Info("Sending club started email",
+			zap.String("to", user.Email),
+			zap.String("userName", user.Name))
+
+		err := s.mailSender.SendClubStarted(
 			user.Email,
 			user.Name,
 			club.Name,
@@ -408,7 +429,19 @@ func (s *WatchClubService) sendClubStartedEmails(ctx context.Context, club *v1.C
 			s.baseURL,
 			[]byte(icsData),
 		)
+		if err != nil {
+			s.logger.Error("Failed to send club started email",
+				zap.String("to", user.Email),
+				zap.Error(err))
+		} else {
+			emailsSent++
+		}
 	}
+
+	s.logger.Info("Finished sending club started emails",
+		zap.String("clubId", club.Id),
+		zap.Int("emailsSent", emailsSent),
+		zap.Int("totalMembers", len(userMap)))
 }
 
 // calculateIntervalDuration converts schedule settings to a time.Duration

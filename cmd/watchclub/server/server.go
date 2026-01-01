@@ -77,7 +77,7 @@ func (sc *serverCommand) Run(logger *zap.Logger, opts *cli.GlobalOptions) error 
 	})
 
 	// Create service
-	svc := service.New(store, emailSender, sc.baseURL)
+	svc := service.New(store, emailSender, sc.baseURL, logger)
 
 	// Create gRPC server
 	grpcServer := grpc.NewServer()

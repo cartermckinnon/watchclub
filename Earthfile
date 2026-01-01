@@ -45,7 +45,7 @@ builder:
     COPY . .
     COPY +proto/go internal/api
     RUN go build -o /go/bin/ ./cmd/...
-    SAVE ARTIFACT /go/bin/watchclub AS LOCAL bin/watchclub
+    SAVE ARTIFACT /go/bin/watchclub /watchclub AS LOCAL bin/watchclub
 
 watchclub:
     FROM ubuntu:26.04
@@ -54,7 +54,7 @@ watchclub:
     COPY +builder/watchclub /usr/bin/watchclub
     ENTRYPOINT ["/usr/bin/watchclub"]
     CMD ["server"]
-    ARG VERSION="0.0.0-dev"
+    ARG VERSION="latest"
     SAVE IMAGE --push $IMAGE_REPO/watchclub:$VERSION
 
 ui-builder:

@@ -141,6 +141,7 @@ const router = {
         if (state.currentUser) {
             navLinks.innerHTML = `
                 <a href="#/my-clubs">My Clubs</a>
+                <a href="#/profile">Profile</a>
                 <a href="#/" onclick="logout(); return false;">Logout</a>
             `;
         } else {
@@ -316,6 +317,41 @@ function renderMyClubsPage() {
                     `).join('')}
                 </div>
             `}
+        </div>
+    `;
+}
+
+// Profile Page
+function renderProfilePage() {
+    const content = document.getElementById('app-content');
+
+    if (!state.currentUser) {
+        router.navigate('/');
+        return;
+    }
+
+    content.innerHTML = `
+        <div class="profile-page">
+            <div class="page-header">
+                <h1>Profile</h1>
+            </div>
+
+            <div class="card">
+                <div class="profile-info">
+                    <div class="profile-field">
+                        <label>Name</label>
+                        <p>${escapeHtml(state.currentUser.name)}</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Email</label>
+                        <p>${escapeHtml(state.currentUser.email)}</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>User ID</label>
+                        <p class="user-id">${escapeHtml(state.currentUser.id)}</p>
+                    </div>
+                </div>
+            </div>
         </div>
     `;
 }
@@ -1033,6 +1069,7 @@ router.register('/login', renderLoginPage);
 router.register('/login/:userId', renderAutoLoginPage);
 router.register('/club/:clubId/join', renderJoinPage);
 router.register('/my-clubs', renderMyClubsPage);
+router.register('/profile', renderProfilePage);
 router.register('/club/:clubId', renderClubDetailPage);
 router.register('/club/:clubId/add-pick', renderAddPickPage);
 router.register('/club/:clubId/pick/:pickId', renderPickDetailPage);

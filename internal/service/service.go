@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -381,34 +380,27 @@ func (s *WatchClubService) StartClub(ctx context.Context, req *v1.StartClubReque
 
 // sendClubStartedEmails sends notification emails to all club members
 func (s *WatchClubService) sendClubStartedEmails(ctx context.Context, club *v1.Club, assignments []*v1.ScheduledPick) {
-	fmt.Printf("📧 Starting to send club started emails for club: %s\n", club.Name)
-
 	// Get all users for the club
 	userMap := make(map[string]*v1.User)
 	for _, memberID := range club.MemberIds {
 		user, err := s.storage.GetUser(ctx, memberID)
 		if err != nil {
-			fmt.Printf("⚠️  Failed to get user %s: %v\n", memberID, err)
 			continue
 		}
 		userMap[user.Id] = user
-		fmt.Printf("✓ Found user: %s (%s)\n", user.Name, user.Email)
 	}
 
 	// Generate ICS calendar data
 	icsData := generateICSCalendar(club, assignments, userMap, s.baseURL)
-	fmt.Printf("📅 Generated ICS data: %d bytes\n", len(icsData))
 
 	// Send email to each member
-	emailCount := 0
 	for _, user := range userMap {
 		if user.Email == "" {
-			fmt.Printf("⚠️  Skipping user %s - no email address\n", user.Name)
 			continue
 		}
 
-		fmt.Printf("📤 Sending email to %s (%s)...\n", user.Name, user.Email)
-		err := s.mailSender.SendClubStarted(
+		// Errors are logged by the mail sender
+		_ = s.mailSender.SendClubStarted(
 			user.Email,
 			user.Name,
 			club.Name,
@@ -416,15 +408,7 @@ func (s *WatchClubService) sendClubStartedEmails(ctx context.Context, club *v1.C
 			s.baseURL,
 			[]byte(icsData),
 		)
-		if err != nil {
-			fmt.Printf("❌ Failed to send email to %s: %v\n", user.Email, err)
-		} else {
-			emailCount++
-			fmt.Printf("✅ Successfully sent email to %s\n", user.Email)
-		}
 	}
-
-	fmt.Printf("📧 Finished sending club started emails. Sent: %d/%d\n", emailCount, len(userMap))
 }
 
 // calculateIntervalDuration converts schedule settings to a time.Duration

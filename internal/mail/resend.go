@@ -276,8 +276,9 @@ Happy watching! 🍿
 		Text:    textBody,
 		Attachments: []*resend.Attachment{
 			{
-				Filename: fmt.Sprintf("%s.ics", clubName),
-				Content:  icsData,
+				Filename:    fmt.Sprintf("%s.ics", clubName),
+				Content:     icsData,
+				ContentType: "text/calendar; charset=utf-8; method=PUBLISH",
 			},
 		},
 	}

@@ -67,7 +67,7 @@ jobs:
           # Tag as latest
           docker tag ${{ env.IMAGE_REPO }}/watchclub:${{ steps.version.outputs.version }} ${{ env.IMAGE_REPO }}/watchclub:latest
           docker tag ${{ env.IMAGE_REPO }}/watchclub/ui:${{ steps.version.outputs.version }} ${{ env.IMAGE_REPO }}/watchclub/ui:latest
-          docker tag ${{ env.IMAGE_REPO }}/watchclub/image-updater:${{ steps.version.outputs.version }} ${{ env.IMAGE_REPO }}/watchclub/crane:latest
+          docker tag ${{ env.IMAGE_REPO }}/watchclub/image-updater:${{ steps.version.outputs.version }} ${{ env.IMAGE_REPO }}/watchclub/image-updater:latest
 
           # Push latest tags
           docker push ${{ env.IMAGE_REPO }}/watchclub:latest

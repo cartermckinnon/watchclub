@@ -154,6 +154,10 @@ function renderHomePage() {
                     <div id="userError" class="error-message"></div>
                 </div>
             ` : `
+                <div class="page-header">
+                    <h1>🏠 Home</h1>
+                </div>
+
                 <div id="userClubsList">Loading your clubs...</div>
 
                 <div class="actions-grid">
@@ -294,7 +298,7 @@ function renderProfilePage() {
     content.innerHTML = `
         <div class="profile-page">
             <div class="page-header">
-                <h1>Profile</h1>
+                <h1>🪪 Profile</h1>
             </div>
 
             <div class="card">

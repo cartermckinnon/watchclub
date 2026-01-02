@@ -101,6 +101,7 @@ body {
     transition: transform 0.2s, box-shadow 0.2s;
     width: 100%;
     max-width: 100%;
+    overflow-x: hidden;
 }
 
 .card h2, .card h3 {
@@ -345,6 +346,8 @@ a.schedule-item:hover {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .form-group label {
@@ -367,6 +370,8 @@ textarea {
     transition: border-color 0.3s;
     width: 100%;
     max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 input[type="text"]:focus,

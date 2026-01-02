@@ -172,9 +172,9 @@ function renderHomePage() {
                             <label>Club name</label>
                             <input type="text" id="clubName" placeholder="e.g., 2026 Movie Club">
                             <label>Start date</label>
-                            <input type="date" id="clubStartDate">
+                            <input type="date" id="clubStartDate" style="max-width: 100%; width: 100%;">
                             <label>Max picks per member</label>
-                            <input type="number" id="clubMaxPicks" min="1" value="1">
+                            <input type="number" id="clubMaxPicks" min="1" value="1" style="max-width: 100%; width: 100%;">
                             <label>Schedule interval</label>
                             <div class="interval-inputs" style="display: flex; gap: 0.5rem;">
                                 <input type="number" id="scheduleQuantity" min="1" value="1" placeholder="1" style="flex: 1; min-width: 0;">
@@ -391,6 +391,9 @@ function renderClubDetailPage(params) {
         const members = response.getMembersList();
         const picks = response.getPicksList();
 
+        // Store data for sorting
+        currentClubData[clubId] = { picks, members };
+
         // Check if user is a member
         const isMember = members.some(m => m.getId() === state.currentUser.id);
 
@@ -489,9 +492,19 @@ function renderClubDetailPage(params) {
                     `}
 
                     ${picks.length > 0 ? `
-                        <h4 style="margin-top: 2rem;">All Picks (${picks.length})</h4>
-                        <div class="pick-list">
-                            ${picks.map(p => {
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+                            <h4 style="margin: 0;">All Picks (${picks.length})</h4>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
+                                <label style="font-size: 0.875rem; color: #666; white-space: nowrap;">Sort by:</label>
+                                <select id="pickSortOrder" onchange="sortPicks('${clubId}')" style="font-size: 0.875rem; padding: 0.5rem;">
+                                    <option value="title">Title</option>
+                                    <option value="year">Year</option>
+                                    <option value="user">User</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="pick-list" id="allPicksList" style="margin-top: 1rem;">
+                            ${getSortedPicks(picks, members, 'title').map(p => {
                                 const pickMember = members.find(m => m.getId() === p.getUserId());
                                 return `
                                     <div class="pick-item">
@@ -984,6 +997,60 @@ function getUnitName(unit, quantity) {
     }
 }
 
+function getSortedPicks(picks, members, sortBy) {
+    const pickArray = Array.from(picks);
+
+    switch(sortBy) {
+        case 'title':
+            return pickArray.sort((a, b) =>
+                a.getTitle().toLowerCase().localeCompare(b.getTitle().toLowerCase())
+            );
+        case 'year':
+            return pickArray.sort((a, b) => {
+                const yearA = a.getYear() || 0;
+                const yearB = b.getYear() || 0;
+                return yearA - yearB;
+            });
+        case 'user':
+            return pickArray.sort((a, b) => {
+                const memberA = members.find(m => m.getId() === a.getUserId());
+                const memberB = members.find(m => m.getId() === b.getUserId());
+                const nameA = memberA ? memberA.getName().toLowerCase() : 'zzz';
+                const nameB = memberB ? memberB.getName().toLowerCase() : 'zzz';
+                return nameA.localeCompare(nameB);
+            });
+        default:
+            return pickArray;
+    }
+}
+
+// Store picks and members for re-sorting
+let currentClubData = {};
+
+function sortPicks(clubId) {
+    const sortBy = document.getElementById('pickSortOrder').value;
+    const data = currentClubData[clubId];
+
+    if (!data) return;
+
+    const { picks, members } = data;
+    const sortedPicks = getSortedPicks(picks, members, sortBy);
+
+    const listEl = document.getElementById('allPicksList');
+    if (!listEl) return;
+
+    listEl.innerHTML = sortedPicks.map(p => {
+        const pickMember = members.find(m => m.getId() === p.getUserId());
+        return `
+            <div class="pick-item">
+                <strong>${escapeHtml(p.getTitle())}</strong> ${p.getYear() ? `(${p.getYear()})` : ''}
+                <span class="pick-author">by ${escapeHtml(pickMember ? pickMember.getName() : 'Unknown')}</span>
+                ${p.getNotes() ? `<p class="pick-notes">${escapeHtml(p.getNotes())}</p>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
 function copyShareLink(url) {
     navigator.clipboard.writeText(url).then(() => {
         const success = document.getElementById('copySuccess');
@@ -1010,6 +1077,7 @@ window.deletePickAction = deletePickAction;
 window.downloadCalendar = downloadCalendar;
 window.copyShareLink = copyShareLink;
 window.logout = logout;
+window.sortPicks = sortPicks;
 
 // ===== INITIALIZE =====
 state.loadUser();

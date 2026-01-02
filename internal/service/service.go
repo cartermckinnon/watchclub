@@ -543,6 +543,69 @@ func (s *WatchClubService) GetClubCalendar(ctx context.Context, req *v1.GetClubC
 	}, nil
 }
 
+// ListUserClubs lists all clubs a user is a member of
+func (s *WatchClubService) ListUserClubs(ctx context.Context, req *v1.ListUserClubsRequest) (*v1.ListUserClubsResponse, error) {
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	clubs, err := s.storage.ListClubsForUser(ctx, req.UserId)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list clubs for user: %v", err)
+	}
+
+	return &v1.ListUserClubsResponse{
+		Clubs: clubs,
+	}, nil
+}
+
+// DeleteClub deletes a club and all associated data
+func (s *WatchClubService) DeleteClub(ctx context.Context, req *v1.DeleteClubRequest) (*v1.DeleteClubResponse, error) {
+	if req.ClubId == "" {
+		return nil, status.Error(codes.InvalidArgument, "club_id is required")
+	}
+
+	// Delete all picks for this club
+	clubReq := &v1.GetClubRequest{ClubId: req.ClubId}
+	clubResp, err := s.GetClub(ctx, clubReq)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get club: %v", err)
+	}
+
+	for _, pick := range clubResp.Picks {
+		if err := s.storage.DeletePick(ctx, pick.Id); err != nil {
+			s.logger.Warn("Failed to delete pick during club deletion",
+				zap.String("pickId", pick.Id),
+				zap.Error(err))
+		}
+	}
+
+	// Delete all scheduled picks for this club
+	scheduledPicksReq := &v1.GetScheduledPicksRequest{ClubId: req.ClubId}
+	scheduledPicksResp, err := s.GetScheduledPicks(ctx, scheduledPicksReq)
+	if err == nil {
+		for _, assignment := range scheduledPicksResp.Assignments {
+			if err := s.storage.DeleteScheduledPick(ctx, assignment.Id); err != nil {
+				s.logger.Warn("Failed to delete scheduled pick during club deletion",
+					zap.String("scheduledPickId", assignment.Id),
+					zap.Error(err))
+			}
+		}
+	}
+
+	// Delete the club itself
+	if err := s.storage.DeleteClub(ctx, req.ClubId); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to delete club: %v", err)
+	}
+
+	s.logger.Info("Club deleted",
+		zap.String("clubId", req.ClubId))
+
+	return &v1.DeleteClubResponse{
+		Success: true,
+	}, nil
+}
+
 // generateICSCalendar creates an ICS calendar file from scheduled picks
 func generateICSCalendar(club *v1.Club, assignments []*v1.ScheduledPick, userMap map[string]*v1.User, baseURL string) string {
 	var ics string

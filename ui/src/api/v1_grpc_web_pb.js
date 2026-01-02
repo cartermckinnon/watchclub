@@ -748,5 +748,127 @@ proto.watchclub.WatchClubServicePromiseClient.prototype.getClubCalendar =
 };
 
 
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.watchclub.ListUserClubsRequest,
+ *   !proto.watchclub.ListUserClubsResponse>}
+ */
+const methodDescriptor_WatchClubService_ListUserClubs = new grpc.web.MethodDescriptor(
+  '/watchclub.WatchClubService/ListUserClubs',
+  grpc.web.MethodType.UNARY,
+  proto.watchclub.ListUserClubsRequest,
+  proto.watchclub.ListUserClubsResponse,
+  /**
+   * @param {!proto.watchclub.ListUserClubsRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.watchclub.ListUserClubsResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.watchclub.ListUserClubsRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.watchclub.ListUserClubsResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.watchclub.ListUserClubsResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.watchclub.WatchClubServiceClient.prototype.listUserClubs =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/watchclub.WatchClubService/ListUserClubs',
+      request,
+      metadata || {},
+      methodDescriptor_WatchClubService_ListUserClubs,
+      callback);
+};
+
+
+/**
+ * @param {!proto.watchclub.ListUserClubsRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.watchclub.ListUserClubsResponse>}
+ *     Promise that resolves to the response
+ */
+proto.watchclub.WatchClubServicePromiseClient.prototype.listUserClubs =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/watchclub.WatchClubService/ListUserClubs',
+      request,
+      metadata || {},
+      methodDescriptor_WatchClubService_ListUserClubs);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.watchclub.DeleteClubRequest,
+ *   !proto.watchclub.DeleteClubResponse>}
+ */
+const methodDescriptor_WatchClubService_DeleteClub = new grpc.web.MethodDescriptor(
+  '/watchclub.WatchClubService/DeleteClub',
+  grpc.web.MethodType.UNARY,
+  proto.watchclub.DeleteClubRequest,
+  proto.watchclub.DeleteClubResponse,
+  /**
+   * @param {!proto.watchclub.DeleteClubRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.watchclub.DeleteClubResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.watchclub.DeleteClubRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.watchclub.DeleteClubResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.watchclub.DeleteClubResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.watchclub.WatchClubServiceClient.prototype.deleteClub =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/watchclub.WatchClubService/DeleteClub',
+      request,
+      metadata || {},
+      methodDescriptor_WatchClubService_DeleteClub,
+      callback);
+};
+
+
+/**
+ * @param {!proto.watchclub.DeleteClubRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.watchclub.DeleteClubResponse>}
+ *     Promise that resolves to the response
+ */
+proto.watchclub.WatchClubServicePromiseClient.prototype.deleteClub =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/watchclub.WatchClubService/DeleteClub',
+      request,
+      metadata || {},
+      methodDescriptor_WatchClubService_DeleteClub);
+};
+
+
 module.exports = proto.watchclub;
 

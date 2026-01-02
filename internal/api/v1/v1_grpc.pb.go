@@ -44,6 +44,10 @@ type WatchClubServiceClient interface {
 	SendLoginEmail(ctx context.Context, in *SendLoginEmailRequest, opts ...grpc.CallOption) (*SendLoginEmailResponse, error)
 	// GetClubCalendar generates an ICS calendar file for a club's schedule
 	GetClubCalendar(ctx context.Context, in *GetClubCalendarRequest, opts ...grpc.CallOption) (*GetClubCalendarResponse, error)
+	// ListUserClubs lists all clubs a user is a member of
+	ListUserClubs(ctx context.Context, in *ListUserClubsRequest, opts ...grpc.CallOption) (*ListUserClubsResponse, error)
+	// DeleteClub deletes a club
+	DeleteClub(ctx context.Context, in *DeleteClubRequest, opts ...grpc.CallOption) (*DeleteClubResponse, error)
 }
 
 type watchClubServiceClient struct {
@@ -153,6 +157,24 @@ func (c *watchClubServiceClient) GetClubCalendar(ctx context.Context, in *GetClu
 	return out, nil
 }
 
+func (c *watchClubServiceClient) ListUserClubs(ctx context.Context, in *ListUserClubsRequest, opts ...grpc.CallOption) (*ListUserClubsResponse, error) {
+	out := new(ListUserClubsResponse)
+	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/ListUserClubs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *watchClubServiceClient) DeleteClub(ctx context.Context, in *DeleteClubRequest, opts ...grpc.CallOption) (*DeleteClubResponse, error) {
+	out := new(DeleteClubResponse)
+	err := c.cc.Invoke(ctx, "/watchclub.WatchClubService/DeleteClub", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WatchClubServiceServer is the server API for WatchClubService service.
 // All implementations must embed UnimplementedWatchClubServiceServer
 // for forward compatibility
@@ -179,6 +201,10 @@ type WatchClubServiceServer interface {
 	SendLoginEmail(context.Context, *SendLoginEmailRequest) (*SendLoginEmailResponse, error)
 	// GetClubCalendar generates an ICS calendar file for a club's schedule
 	GetClubCalendar(context.Context, *GetClubCalendarRequest) (*GetClubCalendarResponse, error)
+	// ListUserClubs lists all clubs a user is a member of
+	ListUserClubs(context.Context, *ListUserClubsRequest) (*ListUserClubsResponse, error)
+	// DeleteClub deletes a club
+	DeleteClub(context.Context, *DeleteClubRequest) (*DeleteClubResponse, error)
 	mustEmbedUnimplementedWatchClubServiceServer()
 }
 
@@ -218,6 +244,12 @@ func (UnimplementedWatchClubServiceServer) SendLoginEmail(context.Context, *Send
 }
 func (UnimplementedWatchClubServiceServer) GetClubCalendar(context.Context, *GetClubCalendarRequest) (*GetClubCalendarResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClubCalendar not implemented")
+}
+func (UnimplementedWatchClubServiceServer) ListUserClubs(context.Context, *ListUserClubsRequest) (*ListUserClubsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUserClubs not implemented")
+}
+func (UnimplementedWatchClubServiceServer) DeleteClub(context.Context, *DeleteClubRequest) (*DeleteClubResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteClub not implemented")
 }
 func (UnimplementedWatchClubServiceServer) mustEmbedUnimplementedWatchClubServiceServer() {}
 
@@ -430,6 +462,42 @@ func _WatchClubService_GetClubCalendar_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WatchClubService_ListUserClubs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUserClubsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WatchClubServiceServer).ListUserClubs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/watchclub.WatchClubService/ListUserClubs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WatchClubServiceServer).ListUserClubs(ctx, req.(*ListUserClubsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WatchClubService_DeleteClub_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteClubRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WatchClubServiceServer).DeleteClub(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/watchclub.WatchClubService/DeleteClub",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WatchClubServiceServer).DeleteClub(ctx, req.(*DeleteClubRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // WatchClubService_ServiceDesc is the grpc.ServiceDesc for WatchClubService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -480,6 +548,14 @@ var WatchClubService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetClubCalendar",
 			Handler:    _WatchClubService_GetClubCalendar_Handler,
+		},
+		{
+			MethodName: "ListUserClubs",
+			Handler:    _WatchClubService_ListUserClubs_Handler,
+		},
+		{
+			MethodName: "DeleteClub",
+			Handler:    _WatchClubService_DeleteClub_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

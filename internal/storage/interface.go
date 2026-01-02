@@ -17,6 +17,7 @@ type Storage interface {
 	CreateClub(ctx context.Context, club *v1.Club) error
 	GetClub(ctx context.Context, id string) (*v1.Club, error)
 	ListClubs(ctx context.Context) ([]*v1.Club, error)
+	ListClubsForUser(ctx context.Context, userID string) ([]*v1.Club, error)
 	DeleteClub(ctx context.Context, id string) error
 
 	CreatePick(ctx context.Context, pick *v1.Pick) error

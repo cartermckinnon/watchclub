@@ -182,6 +182,26 @@ message GetClubCalendarResponse {
   string ics_data = 1;
 }
 
+// ListUserClubsRequest is the request to list all clubs a user is a member of
+message ListUserClubsRequest {
+  string user_id = 1;
+}
+
+// ListUserClubsResponse is the response with the user's clubs
+message ListUserClubsResponse {
+  repeated Club clubs = 1;
+}
+
+// DeleteClubRequest is the request to delete a club
+message DeleteClubRequest {
+  string club_id = 1;
+}
+
+// DeleteClubResponse is the response after deleting a club
+message DeleteClubResponse {
+  bool success = 1;
+}
+
 // WatchClubService is the main service for the watchclub application
 service WatchClubService {
   // CreateUser creates a new user
@@ -216,4 +236,10 @@ service WatchClubService {
 
   // GetClubCalendar generates an ICS calendar file for a club's schedule
   rpc GetClubCalendar(GetClubCalendarRequest) returns (GetClubCalendarResponse);
+
+  // ListUserClubs lists all clubs a user is a member of
+  rpc ListUserClubs(ListUserClubsRequest) returns (ListUserClubsResponse);
+
+  // DeleteClub deletes a club
+  rpc DeleteClub(DeleteClubRequest) returns (DeleteClubResponse);
 }

@@ -223,6 +223,27 @@ func (s *sqliteStorage) ListClubs(ctx context.Context) ([]*v1.Club, error) {
 	return clubs, nil
 }
 
+func (s *sqliteStorage) ListClubsForUser(ctx context.Context, userID string) ([]*v1.Club, error) {
+	// Get all clubs and filter by membership
+	// (More efficient would be to denormalize member_ids or use a join table)
+	allClubs, err := s.ListClubs(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var userClubs []*v1.Club
+	for _, club := range allClubs {
+		for _, memberID := range club.MemberIds {
+			if memberID == userID {
+				userClubs = append(userClubs, club)
+				break
+			}
+		}
+	}
+
+	return userClubs, nil
+}
+
 func (s *sqliteStorage) DeleteClub(ctx context.Context, id string) error {
 	result, err := s.db.ExecContext(ctx, "DELETE FROM clubs WHERE id = ?", id)
 	if err != nil {

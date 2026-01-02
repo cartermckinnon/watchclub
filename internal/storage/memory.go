@@ -119,6 +119,23 @@ func (m *memoryStorage) ListClubs(ctx context.Context) ([]*v1.Club, error) {
 	return clubs, nil
 }
 
+func (m *memoryStorage) ListClubsForUser(ctx context.Context, userID string) ([]*v1.Club, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	clubs := make([]*v1.Club, 0)
+	for _, club := range m.clubs {
+		// Check if user is a member of this club
+		for _, memberID := range club.MemberIds {
+			if memberID == userID {
+				clubs = append(clubs, club)
+				break
+			}
+		}
+	}
+	return clubs, nil
+}
+
 func (m *memoryStorage) DeleteClub(ctx context.Context, id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()

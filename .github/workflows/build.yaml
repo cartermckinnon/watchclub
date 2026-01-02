@@ -76,22 +76,33 @@ jobs:
 
       - name: Summary
         run: |
+          # Get image digests
+          BACKEND_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.IMAGE_REPO }}/watchclub:${{ steps.version.outputs.version }} | cut -d'@' -f2)
+          UI_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.IMAGE_REPO }}/watchclub/ui:${{ steps.version.outputs.version }} | cut -d'@' -f2)
+          UPDATER_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.IMAGE_REPO }}/watchclub/image-updater:${{ steps.version.outputs.version }} | cut -d'@' -f2)
+
           echo "## Container Images Published" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Backend:**" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_REPO }}/watchclub:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "  - Digest: \`${BACKEND_DIGEST}\`" >> $GITHUB_STEP_SUMMARY
           if [[ "${{ steps.version.outputs.is_tag }}" == "true" ]]; then
             echo "- \`${{ env.IMAGE_REPO }}/watchclub:latest\`" >> $GITHUB_STEP_SUMMARY
+            echo "  - Digest: \`${BACKEND_DIGEST}\`" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Frontend:**" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_REPO }}/watchclub/ui:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "  - Digest: \`${UI_DIGEST}\`" >> $GITHUB_STEP_SUMMARY
           if [[ "${{ steps.version.outputs.is_tag }}" == "true" ]]; then
             echo "- \`${{ env.IMAGE_REPO }}/watchclub/ui:latest\`" >> $GITHUB_STEP_SUMMARY
+            echo "  - Digest: \`${UI_DIGEST}\`" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image-Updater:**" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_REPO }}/watchclub/image-updater:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "  - Digest: \`${UPDATER_DIGEST}\`" >> $GITHUB_STEP_SUMMARY
           if [[ "${{ steps.version.outputs.is_tag }}" == "true" ]]; then
             echo "- \`${{ env.IMAGE_REPO }}/watchclub/image-updater:latest\`" >> $GITHUB_STEP_SUMMARY
+            echo "  - Digest: \`${UPDATER_DIGEST}\`" >> $GITHUB_STEP_SUMMARY
           fi

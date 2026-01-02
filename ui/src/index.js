@@ -124,6 +124,7 @@ const router = {
         } else {
             navLinks.innerHTML = `
                 <a href="#/about">About</a>
+                <a href="#/">Login</a>
             `;
         }
     }
@@ -1018,17 +1019,24 @@ function renderLoginPage() {
     const content = document.getElementById('app-content');
     content.innerHTML = `
         <div class="login-page">
+            <div class="page-header">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                    <a href="#/" class="btn-back">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    <h1 style="margin: 0;">Log in to your account</h1>
+                </div>
+            </div>
+
             <div class="card">
-                <h1>Log in to your account</h1>
                 <p>Enter your email address and we'll send you a link to log back in.</p>
                 <div class="form-group">
                     <input type="text" id="loginEmail" placeholder="Your email">
                     <button onclick="sendLoginEmail()">Send Login Link</button>
                 </div>
                 <div id="loginResult" class="result"></div>
-                <p style="margin-top: 1rem; text-align: center;">
-                    <a href="#/" class="btn-link">← Back to home</a>
-                </p>
             </div>
         </div>
     `;
@@ -1088,12 +1096,10 @@ function sendLoginEmail() {
             return;
         }
 
-        resultEl.innerHTML = `
-            <strong>Check your email!</strong><br>
-            ${response.getMessage()}<br><br>
-        `;
-        resultEl.className = 'result success';
+        resultEl.innerHTML = `Check your email! ${response.getMessage()}`;
+        resultEl.className = 'success-message';
         resultEl.style.display = 'block';
+        setTimeout(() => resultEl.style.display = 'none', 6000);
     });
 }
 

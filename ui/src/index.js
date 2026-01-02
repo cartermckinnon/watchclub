@@ -117,11 +117,14 @@ const router = {
         if (state.currentUser) {
             navLinks.innerHTML = `
                 <a href="#/">Home</a>
+                <a href="#/about">About</a>
                 <a href="#/profile">Profile</a>
                 <a href="#/" onclick="logout(); return false;">Logout</a>
             `;
         } else {
-            navLinks.innerHTML = '';
+            navLinks.innerHTML = `
+                <a href="#/about">About</a>
+            `;
         }
     }
 };
@@ -316,6 +319,37 @@ function renderProfilePage() {
                         <p class="user-id">${escapeHtml(state.currentUser.id)}</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    `;
+}
+
+// About Page
+function renderAboutPage() {
+    const content = document.getElementById('app-content');
+
+    content.innerHTML = `
+        <div class="about-page">
+            <div class="page-header">
+                <h1>ℹ️ About WatchClub</h1>
+            </div>
+
+            <div class="card">
+                <h2>What is WatchClub?</h2>
+                <p>WatchClub helps you coordinate watching movies, shows, or any content with your friends. No more endless debates about what to watch next!</p>
+
+                <h3 style="margin-top: 2rem;">How it works</h3>
+                <ol style="line-height: 2; margin-top: 1rem;">
+                    <li><strong>Create a club</strong> - Set a start date and schedule (daily, weekly, monthly)</li>
+                    <li><strong>Invite friends</strong> - Share your club link with the group</li>
+                    <li><strong>Add picks</strong> - Everyone adds their picks with optional notes and links</li>
+                    <li><strong>Start the club</strong> - Shuffle all picks and generate a viewing schedule</li>
+                    <li><strong>Watch together</strong> - Follow the schedule and enjoy!</li>
+                </ol>
+
+                <p style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0; color: #666;">
+                    Built with ❤️ by <a href="https://github.com/cartermckinnon" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: none;">Carter McKinnon</a>
+                </p>
             </div>
         </div>
     `;
@@ -1072,6 +1106,7 @@ router.register('/login', renderLoginPage);
 router.register('/login/:userId', renderAutoLoginPage);
 router.register('/club/:clubId/join', renderJoinPage);
 router.register('/profile', renderProfilePage);
+router.register('/about', renderAboutPage);
 router.register('/club/:clubId', renderClubDetailPage);
 router.register('/club/:clubId/add-pick', renderAddPickPage);
 router.register('/club/:clubId/pick/:pickId', renderPickDetailPage);

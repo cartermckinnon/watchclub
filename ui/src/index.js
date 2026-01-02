@@ -177,8 +177,8 @@ function renderHomePage() {
                             <input type="number" id="clubMaxPicks" min="1" value="1">
                             <label>Schedule interval</label>
                             <div class="interval-inputs" style="display: flex; gap: 0.5rem;">
-                                <input type="number" id="scheduleQuantity" min="1" value="1" placeholder="1" style="flex: 1;">
-                                <select id="scheduleUnit" style="flex: 1;">
+                                <input type="number" id="scheduleQuantity" min="1" value="1" placeholder="1" style="flex: 1; min-width: 0;">
+                                <select id="scheduleUnit" style="flex: 1; min-width: 0;">
                                     <option value="1">Days</option>
                                     <option value="2" selected>Weeks</option>
                                     <option value="3">Months</option>

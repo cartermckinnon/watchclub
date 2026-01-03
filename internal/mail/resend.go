@@ -2,7 +2,9 @@ package mail
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/cartermckinnon/watchclub/internal/util"
 	"github.com/resend/resend-go/v2"
 	"go.uber.org/zap"
 )
@@ -14,6 +16,8 @@ type resendSender struct {
 	fromName    string
 	baseURL     string
 	logger      *zap.Logger
+
+	lock util.RateLimitedMutex
 }
 
 func newResendSender(apiKey, fromAddress, fromName, baseURL string, logger *zap.Logger) (*resendSender, error) {
@@ -32,10 +36,14 @@ func newResendSender(apiKey, fromAddress, fromName, baseURL string, logger *zap.
 		fromName:    fromName,
 		baseURL:     baseURL,
 		logger:      logger,
+		lock:        util.NewRateLimitedMutex(500 * time.Millisecond), // our limit is 2 requests/sec
 	}, nil
 }
 
 func (r *resendSender) SendLogin(to, userName, userID, baseURL string) error {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
 	if baseURL == "" {
 		baseURL = r.baseURL
 	}
@@ -156,6 +164,9 @@ If you didn't request this login link, you can safely ignore this email.
 }
 
 func (r *resendSender) SendClubStarted(to, userName, clubName, clubID, baseURL string, icsData []byte) error {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
 	if baseURL == "" {
 		baseURL = r.baseURL
 	}

@@ -493,7 +493,7 @@ function renderClubDetailPage(params) {
                                 return `
                                     <div class="pick-item ${isCurrentUserPick ? 'user-pick' : ''}">
                                         <div class="pick-content">
-                                            <strong>${escapeHtml(p.getTitle())}</strong> ${p.getYear() ? `(${p.getYear()})` : ''}
+                                            <strong><i>${escapeHtml(p.getTitle())}</i></strong> ${p.getYear() ? `(${p.getYear()})` : ''}
                                             <span class="pick-author">by ${escapeHtml(pickMember ? pickMember.getName() : 'Unknown')}</span>
                                             ${p.getNotes() ? `<p class="pick-notes">${escapeHtml(p.getNotes())}</p>` : ''}
                                         </div>
@@ -635,7 +635,7 @@ function renderPickDetailPage(params) {
                             <path d="M19 12H5M12 19l-7-7 7-7"/>
                         </svg>
                     </a>
-                    <h1 style="margin: 0;">${escapeHtml(pick.getTitle())}${pick.getYear() ? ` (${pick.getYear()})` : ''}</h1>
+                    <h1 style="margin: 0;"><i>${escapeHtml(pick.getTitle())}</i>${pick.getYear() ? ` (${pick.getYear()})` : ''}</h1>
                 </div>
                 <div class="club-meta">
                     <span>Picked by ${escapeHtml(member ? member.getName() : 'Unknown')}</span>
@@ -965,7 +965,7 @@ function loadSchedule(clubId, club, members) {
                         <a href="#/club/${clubId}/pick/${pick.getId()}" class="schedule-item">
                             <div class="week-number">#${a.getSequenceNumber()}</div>
                             <div class="schedule-details">
-                                <strong>${escapeHtml(pick.getTitle())}</strong> ${pick.getYear() ? `(${pick.getYear()})` : ''}
+                                <strong><i>${escapeHtml(pick.getTitle())}</i></strong> ${pick.getYear() ? `(${pick.getYear()})` : ''}
                                 <span class="pick-author">by ${escapeHtml(member ? member.getName() : 'Unknown')}</span>
                                 <div class="schedule-date">${formatDate(a.getStartDate())}</div>
                             </div>
@@ -1040,7 +1040,7 @@ function sortPicks(clubId) {
         return `
             <div class="pick-item ${isCurrentUserPick ? 'user-pick' : ''}">
                 <div class="pick-content">
-                    <strong>${escapeHtml(p.getTitle())}</strong> ${p.getYear() ? `(${p.getYear()})` : ''}
+                    <strong><i>${escapeHtml(p.getTitle())}</i></strong> ${p.getYear() ? `(${p.getYear()})` : ''}
                     <span class="pick-author">by ${escapeHtml(pickMember ? pickMember.getName() : 'Unknown')}</span>
                     ${p.getNotes() ? `<p class="pick-notes">${escapeHtml(p.getNotes())}</p>` : ''}
                 </div>

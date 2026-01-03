@@ -464,36 +464,11 @@ function renderClubDetailPage(params) {
 
             ${!club.getStarted() ? `
                 <div class="card">
-                    <h3>Your Picks (${userPicks.length}/${maxPicks === 0 ? '∞' : maxPicks})</h3>
-
-                    ${userPicks.length > 0 ? `
-                        <div class="user-picks-list">
-                            ${userPicks.map(pick => `
-                                <div class="pick-item user-pick">
-                                    <div class="pick-content">
-                                        <strong>${escapeHtml(pick.getTitle())}</strong>
-                                        ${pick.getYear() ? `(${pick.getYear()})` : ''}
-                                        ${pick.getNotes() ? `<p class="pick-notes">${escapeHtml(pick.getNotes())}</p>` : ''}
-                                    </div>
-                                    <button class="btn-danger btn-small" onclick="deletePickAction('${clubId}', '${pick.getId()}')">
-                                        Delete
-                                    </button>
-                                </div>
-                            `).join('')}
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 1rem;">
+                        <div>
+                            <h3 style="margin: 0; white-space: nowrap;">Picks (${picks.length})</h3>
                         </div>
-                    ` : '<p>You haven\'t added any picks yet.</p>'}
-
-                    ${canAddMore ? `
-                        <a href="#/club/${clubId}/add-pick" class="btn">
-                            ${userPicks.length === 0 ? 'Add A Pick' : 'Add Another Pick'}
-                        </a>
-                    ` : `
-                        <p class="info-message">You've reached the maximum number of picks (${maxPicks}).</p>
-                    `}
-
-                    ${picks.length > 0 ? `
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
-                            <h4 style="margin: 0;">All Picks (${picks.length})</h4>
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
                             <div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
                                 <label style="font-size: 0.875rem; color: #666; white-space: nowrap;">Sort by:</label>
                                 <select id="pickSortOrder" onchange="sortPicks('${clubId}')" style="font-size: 0.875rem; padding: 0.5rem;">
@@ -502,26 +477,42 @@ function renderClubDetailPage(params) {
                                     <option value="user">User</option>
                                 </select>
                             </div>
+                            ${
+                                canAddMore ?
+                                    `<a href="#/club/${clubId}/add-pick" class="btn-add-pick" title="Add a Pick">+</a>`
+                                    : `<button class="btn-add-pick" disabled title="Maximum picks reached">+</button>`
+                            }
                         </div>
-                        <div class="pick-list" id="allPicksList" style="margin-top: 1rem;">
+                    </div>
+
+                    ${picks.length > 0 ? `
+                        <div class="pick-list" id="allPicksList">
                             ${getSortedPicks(picks, members, 'title').map(p => {
                                 const pickMember = members.find(m => m.getId() === p.getUserId());
+                                const isCurrentUserPick = p.getUserId() === state.currentUser.id;
                                 return `
-                                    <div class="pick-item">
-                                        <strong>${escapeHtml(p.getTitle())}</strong> ${p.getYear() ? `(${p.getYear()})` : ''}
-                                        <span class="pick-author">by ${escapeHtml(pickMember ? pickMember.getName() : 'Unknown')}</span>
-                                        ${p.getNotes() ? `<p class="pick-notes">${escapeHtml(p.getNotes())}</p>` : ''}
+                                    <div class="pick-item ${isCurrentUserPick ? 'user-pick' : ''}">
+                                        <div class="pick-content">
+                                            <strong>${escapeHtml(p.getTitle())}</strong> ${p.getYear() ? `(${p.getYear()})` : ''}
+                                            <span class="pick-author">by ${escapeHtml(pickMember ? pickMember.getName() : 'Unknown')}</span>
+                                            ${p.getNotes() ? `<p class="pick-notes">${escapeHtml(p.getNotes())}</p>` : ''}
+                                        </div>
+                                        ${isCurrentUserPick ? `
+                                            <button class="btn-delete-pick" onclick="deletePickAction('${clubId}', '${p.getId()}')" title="Delete this pick">×</button>
+                                        ` : ''}
                                     </div>
                                 `;
                             }).join('')}
                         </div>
 
-                        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
-                            <p style="color: #666; margin-bottom: 1rem;">Ready to start? This will shuffle all picks and generate the viewing schedule.</p>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #e0e0e0;">
+                            <p style="color: #666; margin-bottom: 1rem;"><b>Ready to start watching?</b> This will shuffle all picks and generate the viewing schedule.</p>
                             <button onclick="startClubAction('${clubId}')" class="btn-start">Start Club</button>
                             <div id="startError" class="error-message"></div>
                         </div>
-                    ` : ''}
+                    ` : `
+                        <p style="color: #666; margin-top: 1rem;">No picks yet.</p>
+                    `}
                 </div>
             ` : ''}
 
@@ -868,6 +859,10 @@ function addPickAction(clubId) {
 }
 
 function startClubAction(clubId) {
+    if (!confirm('Are you sure you want to start this club? This will shuffle all picks and generate the viewing schedule. This action cannot be undone.')) {
+        return;
+    }
+
     const errorEl = document.getElementById('startError');
     const request = new StartClubRequest();
     request.setClubId(clubId);
@@ -1041,11 +1036,17 @@ function sortPicks(clubId) {
 
     listEl.innerHTML = sortedPicks.map(p => {
         const pickMember = members.find(m => m.getId() === p.getUserId());
+        const isCurrentUserPick = p.getUserId() === state.currentUser.id;
         return `
-            <div class="pick-item">
-                <strong>${escapeHtml(p.getTitle())}</strong> ${p.getYear() ? `(${p.getYear()})` : ''}
-                <span class="pick-author">by ${escapeHtml(pickMember ? pickMember.getName() : 'Unknown')}</span>
-                ${p.getNotes() ? `<p class="pick-notes">${escapeHtml(p.getNotes())}</p>` : ''}
+            <div class="pick-item ${isCurrentUserPick ? 'user-pick' : ''}">
+                <div class="pick-content">
+                    <strong>${escapeHtml(p.getTitle())}</strong> ${p.getYear() ? `(${p.getYear()})` : ''}
+                    <span class="pick-author">by ${escapeHtml(pickMember ? pickMember.getName() : 'Unknown')}</span>
+                    ${p.getNotes() ? `<p class="pick-notes">${escapeHtml(p.getNotes())}</p>` : ''}
+                </div>
+                ${isCurrentUserPick ? `
+                    <button class="btn-delete-pick" onclick="deletePickAction('${clubId}', '${p.getId()}')" title="Delete this pick">×</button>
+                ` : ''}
             </div>
         `;
     }).join('');
